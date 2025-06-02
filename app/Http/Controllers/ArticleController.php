@@ -1,0 +1,179 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Article;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
+class ArticleController extends Controller
+{
+    public function index(Request $request)
+    {
+        try {
+            $query = Article::query()->with(['author.user', 'category', 'tags']);
+
+            // Filtering by category or tag slug
+            if ($request->has('category')) {
+                $query->whereHas('category', function ($q) use ($request) {
+                    $q->where('slug', $request->category);
+                });
+            }
+
+            if ($request->has('tag')) {
+                $query->whereHas('tags', function ($q) use ($request) {
+                    $q->where('slug', $request->tag);
+                });
+            }
+
+            $articles = $query->paginate(10);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Articles retrieved successfully.',
+                'data' => $articles,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve articles.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $article = Article::with([
+                'author.user',
+                'category',
+                'tags',
+                'media',
+            ])->withCount('comments')->findOrFail($id);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Article retrieved successfully.',
+                'data' => $article,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve article.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'title' => 'required|string|max:255',
+                'summary' => 'nullable|string',
+                'content' => 'required|string',
+                'author_id' => 'required|exists:author,id',
+                'category_id' => 'nullable|exists:categories,id',
+                'status' => 'required|in:draft,published,scheduled',
+                'scheduled_publish_time' => 'nullable|date',
+                'cover_image_url' => 'nullable|url',
+                'tags' => 'nullable|array',
+                'tags.*' => 'exists:tags,id',
+            ]);
+
+            $data['slug'] = Str::slug($data['title']);
+
+            $article = Article::create($data);
+
+            if (!empty($data['tags'])) {
+                $article->tags()->sync($data['tags']);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Article created successfully.',
+                'data' => $article->load('tags'),
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to create article.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $article = Article::findOrFail($id);
+
+            $data = $request->validate([
+                'title' => 'sometimes|string|max:255',
+                'summary' => 'nullable|string',
+                'content' => 'sometimes|string',
+                'author_id' => 'sometimes|exists:author,id',
+                'category_id' => 'nullable|exists:categories,id',
+                'status' => 'sometimes|in:draft,published,scheduled',
+                'scheduled_publish_time' => 'nullable|date',
+                'cover_image_url' => 'nullable|url',
+                'tags' => 'nullable|array',
+                'tags.*' => 'exists:tags,id',
+            ]);
+
+            if (isset($data['title'])) {
+                $data['slug'] = Str::slug($data['title']);
+            }
+
+            $article->update($data);
+
+            if (array_key_exists('tags', $data)) {
+                $article->tags()->sync($data['tags'] ?? []);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Article updated successfully.',
+                'data' => $article->load('tags'),
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to update article.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $article = Article::findOrFail($id);
+            $article->delete();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Article deleted successfully.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to delete article.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+}

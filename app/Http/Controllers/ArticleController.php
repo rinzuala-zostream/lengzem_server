@@ -126,6 +126,7 @@ class ArticleController extends Controller
                 'cover_image_url' => 'nullable|url',
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id',
+                'published_at' => 'nullable|date',
             ]);
 
             if (isset($data['title'])) {

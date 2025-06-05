@@ -18,6 +18,12 @@ class Article extends Model
         'published_at',
     ];
 
+    protected $casts = [
+        'isCommentable' => 'boolean',
+    
+    ];
+
+
     protected $dates = ['published_at'];
 
     // Article belongs to an Author

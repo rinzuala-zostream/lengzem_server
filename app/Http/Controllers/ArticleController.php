@@ -80,6 +80,8 @@ class ArticleController extends Controller
                 'cover_image_url' => 'nullable|url',
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id',
+                'isCommentable' => 'nullable|boolean',
+                'published_at' => 'nullable|date',
             ]);
 
             $data['slug'] = Str::slug($data['title']);
@@ -141,7 +143,7 @@ class ArticleController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'Article updated successfully.',
+                'message' => 'Article updated successfully',
                 'data' => $article->load('tags'),
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {

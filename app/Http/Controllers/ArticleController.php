@@ -73,18 +73,25 @@ class ArticleController extends Controller
                 'title' => 'required|string|max:255',
                 'summary' => 'nullable|string',
                 'content' => 'required|string',
+                'slug' => 'nullable|string|max:255|unique:articles,slug',
                 'author_id' => 'required|exists:author,id',
                 'category_id' => 'nullable|exists:categories,id',
-                'status' => 'required|in:draft,published,scheduled',
+                'status' => 'required|in:Draft,Published,Scheduled',
                 'scheduled_publish_time' => 'nullable|date',
-                'cover_image_url' => 'nullable|url',
+                'cover_image_url' => 'nullable|string',
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id',
                 'isCommentable' => 'nullable|boolean',
                 'published_at' => 'nullable|date',
             ]);
 
-            $data['slug'] = Str::slug($data['title']);
+            // Set published_at to now if not provided
+            if (empty($data['published_at'])) {
+                $data['published_at'] = now();
+            }
+
+            // Auto-generate slug if not provided
+            $data['slug'] = $data['slug'] ?? Str::slug($data['title']);
 
             $article = Article::create($data);
 
@@ -123,9 +130,11 @@ class ArticleController extends Controller
                 'content' => 'sometimes|string',
                 'author_id' => 'sometimes|exists:author,id',
                 'category_id' => 'nullable|exists:categories,id',
-                'status' => 'sometimes|in:draft,published,scheduled',
+                'slug' => 'nullable|string|max:255|unique:articles,slug',
+                'isCommentable' => 'nullable|boolean',
+                'status' => 'sometimes|in:Draft,Published,Scheduled',
                 'scheduled_publish_time' => 'nullable|date',
-                'cover_image_url' => 'nullable|url',
+                'cover_image_url' => 'nullable|string',
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id',
                 'published_at' => 'nullable|date',

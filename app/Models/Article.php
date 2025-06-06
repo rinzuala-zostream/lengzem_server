@@ -16,6 +16,11 @@ class Article extends Model
         'content',
         'excerpt',
         'published_at',
+        'status', // draft, published, archived
+        'isCommentable',
+        'cover_image_url',
+        'summary',
+        'scheduled_publish_time'
     ];
 
     protected $casts = [

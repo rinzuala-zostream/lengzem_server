@@ -11,7 +11,7 @@ class TagController extends Controller
     public function index()
     {
         try {
-            $tags = Tag::paginate(20);
+            $tags = Tag::orderBy('name', 'asc')->paginate(20);  // Sort by 'name' in ascending order
             return response()->json([
                 'status' => true,
                 'message' => 'Tags retrieved successfully.',
@@ -21,6 +21,43 @@ class TagController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to retrieve tags.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function search(Request $request)
+    {
+        try {
+            $searchTerm = $request->query('name'); // Get the search term from the query string
+
+            if (!$searchTerm) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No search term provided.',
+                ], 400);
+            }
+
+            $tags = Tag::where('name', 'like', '%' . $searchTerm . '%') // search by name
+                ->orderBy('name', 'asc')
+                ->get();
+
+            if ($tags->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No tags found matching the search term.',
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Tags found successfully.',
+                'data' => $tags,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to search tags.',
                 'error' => $e->getMessage(),
             ], 500);
         }

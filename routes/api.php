@@ -45,6 +45,7 @@ Route::get('/tags/{id}', [TagController::class, 'show']);
 Route::post('/tags', [TagController::class, 'store']);
 Route::put('/tags/{id}', [TagController::class, 'update']);
 Route::delete('/tags/{id}', [TagController::class, 'destroy']);
+Route::get('/tags/search', [TagController::class, 'search']);
 
 //Article routes
 Route::get('/articles', [ArticleController::class, 'index']);

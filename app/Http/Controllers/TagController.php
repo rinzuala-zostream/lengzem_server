@@ -28,6 +28,9 @@ class TagController extends Controller
 
     public function search(Request $request)
     {
+        \Log::info('Search function called');
+        \Log::info('Search term: ' . $request->query('name'));
+
         try {
             $searchTerm = $request->query('name'); // Get the search term from the query string
 
@@ -40,7 +43,7 @@ class TagController extends Controller
 
             $tags = Tag::where('name', 'like', '%' . $searchTerm . '%') // search by name
                 ->orderBy('name', 'asc')
-                ->get();
+                ->paginate(20); // Sort by 'name' in ascending order
 
             if ($tags->isEmpty()) {
                 return response()->json([

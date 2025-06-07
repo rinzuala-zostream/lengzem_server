@@ -8,15 +8,20 @@ use Illuminate\Http\Request;
 class AuthorController extends Controller
 {
     // List all authors
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $authors = Author::with('user')->paginate(15);
+            $query = Author::query()->with('user');
+
+            // Filtering by category or tag slug
+            if ($request->has('user_id')) {
+                $query->where('user_id', $request->user_id);
+            }
 
             return response()->json([
                 'status' => true,
                 'message' => 'Authors retrieved successfully.',
-                'data' => $authors
+                'data' => $query->paginate(10)
             ]);
         } catch (\Exception $e) {
             return response()->json([

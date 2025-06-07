@@ -20,6 +20,12 @@ class ArticleController extends Controller
                 });
             }
 
+            if ($request->has('author_id')) {
+                $query->whereHas('author', function ($q) use ($request) {
+                    $q->where('id', $request->author_id);
+                });
+            }
+
             if ($request->has('tag')) {
                 $query->whereHas('tags', function ($q) use ($request) {
                     $q->where('slug', $request->tag);

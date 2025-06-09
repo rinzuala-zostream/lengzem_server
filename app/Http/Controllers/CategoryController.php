@@ -11,7 +11,7 @@ class CategoryController extends Controller
     public function index()
     {
         try {
-            $categories = Category::paginate(15);
+            $categories = Category::withCount('articles')->paginate(15);
             return response()->json([
                 'status' => true,
                 'message' => 'Categories retrieved successfully.',
@@ -29,7 +29,7 @@ class CategoryController extends Controller
     public function show($id)
     {
         try {
-            $category = Category::findOrFail($id);
+            $category = Category::withCount('articles')->findOrFail($id);
             return response()->json([
                 'status' => true,
                 'message' => 'Category retrieved successfully.',

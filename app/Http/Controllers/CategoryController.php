@@ -14,13 +14,13 @@ class CategoryController extends Controller
             $categories = Category::withCount('articles')->paginate(15);
             return response()->json([
                 'status' => true,
-                'message' => 'Categories retrieved successfully.',
+                'message' => 'Categories retrieved successfully',
                 'data' => $categories
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to retrieve categories.',
+                'message' => 'Failed to retrieve categories',
                 'error' => $e->getMessage()
             ], 500);
         }

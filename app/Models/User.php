@@ -19,6 +19,6 @@ class User extends Authenticatable
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id', 'num', 'name', 'email', 'role', 'bio', 'profile_image_url',
+        'id', 'phone', 'num', 'name', 'email', 'role', 'bio', 'profile_image_url',
     ];
 }

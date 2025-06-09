@@ -56,14 +56,12 @@ class UserController extends Controller
             $data = $request->validate([
                 'id' => 'required|string|max:100',
                 'name' => 'required|string|max:100',
-                'email' => 'required|email|unique:users,email',
-                'password' => 'required|string|min:6',
+                'phone' => 'required|string|max:15',
+                'email' => 'nullable|email|unique:users,email',
                 'role' => ['required', Rule::in(['admin','editor','reader'])],
                 'bio' => 'nullable|string',
                 'profile_image_url' => 'nullable|url',
             ]);
-
-            $data['password'] = Hash::make($data['password']);
             $user = User::create($data);
 
             return response()->json([
@@ -96,18 +94,12 @@ class UserController extends Controller
 
             $data = $request->validate([
                 'name' => 'sometimes|string|max:100',
+                'phone' => 'nullable|string|max:15',
                 'email' => ['sometimes','email', Rule::unique('users')->ignore($user->id)],
-                'password' => 'nullable|string|min:6',
                 'role' => ['sometimes', Rule::in(['admin','editor','reader'])],
                 'bio' => 'nullable|string',
                 'profile_image_url' => 'nullable|url',
             ]);
-
-            if (isset($data['password'])) {
-                $data['password'] = Hash::make($data['password']);
-            } else {
-                unset($data['password']);
-            }
 
             $user->update($data);
 

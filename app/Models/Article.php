@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Article extends Model
@@ -15,19 +16,17 @@ class Article extends Model
         'slug',
         'content',
         'excerpt',
-        'published_at',
+        'scheduled_publish_time',
         'status', // draft, published, archived
         'isCommentable',
         'cover_image_url',
         'summary',
-        'scheduled_publish_time'
     ];
 
     protected $casts = [
         'isCommentable' => 'boolean',
-    
-    ];
 
+    ];
 
     protected $dates = ['published_at'];
 
@@ -71,4 +70,21 @@ class Article extends Model
     {
         return $query->where('status', 'published');
     }
+
+    public function toArray()
+    {
+        $array = parent::toArray();
+
+        // Format the fields
+        $array['published_at'] = $this->published_at
+            ? Carbon::parse($this->published_at)->format('F j, Y')
+            : null;
+
+        $array['scheduled_publish_time'] = $this->scheduled_publish_time
+            ? Carbon::parse($this->scheduled_publish_time)->format('F j, Y')
+            : null;
+
+        return $array;
+    }
+
 }

@@ -14,6 +14,12 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },
+
+    {
+        title: 'Tiptap Editor',
+        href: '/tiptap-editor',
+        icon: LayoutGrid,
+    },
 ];
 
 const footerNavItems: NavItem[] = [

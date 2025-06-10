@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ArticleTagController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\SubscriptionPlanController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\CategoryController;
@@ -12,11 +14,16 @@ use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\MediaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 // Authenticated user info route
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::get('tiptap-editor', function () {
+    return Inertia::render('TiptapEditor');
+});
 
 Route::middleware(['firebase.auth'])->group(function () {
     //User routes
@@ -78,6 +85,20 @@ Route::middleware(['firebase.auth'])->group(function () {
     Route::post('/articles/{article_id}/media', [MediaController::class, 'store']);
     Route::put('/articles/{article_id}/media/{id}', [MediaController::class, 'update']);
     Route::delete('/articles/{article_id}/media/{id}', [MediaController::class, 'destroy']);
+
+    // Subscription Plan routes
+    Route::get('/subscription-plans', [SubscriptionPlanController::class, 'index']);
+    Route::post('/subscription-plans', [SubscriptionPlanController::class, 'store']);
+    Route::get('/subscription-plans/{id}', [SubscriptionPlanController::class, 'show']);
+    Route::put('/subscription-plans/{id}', [SubscriptionPlanController::class, 'update']);
+    Route::delete('/subscription-plans/{id}', [SubscriptionPlanController::class, 'destroy']);
+
+    // Subscription routes
+    Route::get('/subscriptions', [SubscriptionController::class, 'index']);
+    Route::post('/subscriptions', [SubscriptionController::class, 'store']);
+    Route::get('/subscriptions/{id}', [SubscriptionController::class, 'show']);
+    Route::put('/subscriptions/{id}', [SubscriptionController::class, 'update']);
+    Route::delete('/subscriptions/{id}', [SubscriptionController::class, 'destroy']);
 
     Route::get('/home', [HomeController::class, 'index']);
 

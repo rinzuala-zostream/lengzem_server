@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ArticleTagController;
+use App\Http\Controllers\CheckPendingPayment;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionPlanController;
@@ -20,10 +21,6 @@ use Inertia\Inertia;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
-
-Route::get('tiptap-editor', function () {
-    return Inertia::render('TiptapEditor');
-});
 
 Route::middleware(['firebase.auth'])->group(function () {
     //User routes
@@ -99,6 +96,8 @@ Route::middleware(['firebase.auth'])->group(function () {
     Route::get('/subscriptions/{id}', [SubscriptionController::class, 'show']);
     Route::put('/subscriptions/{id}', [SubscriptionController::class, 'update']);
     Route::delete('/subscriptions/{id}', [SubscriptionController::class, 'destroy']);
+    Route::get('/subscriptions/{userId}/verify', [CheckPendingPayment::class, 'processUserPayments']);
+
 
     Route::get('/home', [HomeController::class, 'index']);
 

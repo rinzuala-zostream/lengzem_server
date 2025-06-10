@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -9,15 +10,49 @@ use Illuminate\Validation\ValidationException;
 class SubscriptionPlanController extends Controller
 {
     // Get all subscription plans
-    public function index()
+    public function index(Request $request)
     {
+        $userId = $request->query('user_id');
         $plans = SubscriptionPlan::all();
-        
+
         if ($plans->isEmpty()) {
             return response()->json([
                 'status' => false,
                 'message' => 'No subscription plans found'
             ], 404);
+        }
+
+        $activePlanId = null;
+        $currentPlan = null;
+
+        if ($userId) {
+            $activeSubscription = Subscription::where('user_id', $userId)
+                ->where('status', 'active')
+                ->latest('id')
+                ->first();
+
+            if ($activeSubscription) {
+                $activePlanId = $activeSubscription->subscription_plan_id;
+                $currentPlan = $plans->firstWhere('id', $activePlanId);
+            }
+        }
+
+        // Mark the current plan and filter others
+        $plans = $plans->map(function ($plan) use ($currentPlan) {
+            $plan->current_plan = false;
+
+            if ($currentPlan && $plan->id === $currentPlan->id) {
+                $plan->current_plan = true;
+            }
+
+            return $plan;
+        });
+
+        // Filter to only show upgradeable plans (price > current)
+        if ($currentPlan) {
+            $plans = $plans->filter(function ($plan) use ($currentPlan) {
+                return $plan->price > $currentPlan->price || $plan->current_plan;
+            })->values(); // reindex collection
         }
 
         return response()->json([
@@ -69,7 +104,7 @@ class SubscriptionPlanController extends Controller
     public function show($id)
     {
         $subscriptionPlan = SubscriptionPlan::find($id);
-        
+
         if (!$subscriptionPlan) {
             return response()->json([
                 'status' => false,
@@ -95,9 +130,9 @@ class SubscriptionPlanController extends Controller
                 'interval_value' => 'sometimes|required|integer|min:1',
                 'interval_unit' => 'sometimes|required|in:day,week,month,year',
             ]);
-            
+
             $subscriptionPlan = SubscriptionPlan::find($id);
-            
+
             if (!$subscriptionPlan) {
                 return response()->json([
                     'status' => false,
@@ -132,7 +167,7 @@ class SubscriptionPlanController extends Controller
     public function destroy($id)
     {
         $subscriptionPlan = SubscriptionPlan::find($id);
-        
+
         if (!$subscriptionPlan) {
             return response()->json([
                 'status' => false,

@@ -21,6 +21,7 @@ class Article extends Model
         'isCommentable',
         'cover_image_url',
         'summary',
+        'published_at',
     ];
 
     protected $casts = [

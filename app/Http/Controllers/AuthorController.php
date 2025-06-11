@@ -55,7 +55,7 @@ class AuthorController extends Controller
     // Create author
     public function store(Request $request)
     {
-        try {
+        try { 
             $data = $request->validate([
                 'user_id' => 'required|exists:users,id',
                 'pen_name' => 'nullable|string|max:100',

@@ -8,7 +8,7 @@ class Author extends Model
 {
     protected $table = 'author';
     protected $fillable = [
-        'user_id', 'bio', 'profile_picture', 'social_links',
+        'user_id', 'bio', 'pen_name', 'social_links',
     ];
 
     // Author belongs to one User

@@ -72,13 +72,6 @@ class UserController extends Controller
             ]);
             $user = User::create($data);
 
-            if ($data['role'] === 'editor') {
-                // Automatically create an author profile if the user is an author
-                $this->authorController->store(new Request([
-                    'user_id' => $user->id,
-                ]));
-            }
-
             return response()->json([
                 'status' => true,
                 'message' => 'User created successfully.',

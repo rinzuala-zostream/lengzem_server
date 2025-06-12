@@ -3,12 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Http\Controllers\AuthorController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+
+    protected $authorController;
+
+    public function __construct(AuthorController $authorController)
+    {
+        $this->authorController = $authorController;
+    }
     // List all users (admin only)
     public function index()
     {
@@ -63,6 +71,13 @@ class UserController extends Controller
                 'profile_image_url' => 'nullable|url',
             ]);
             $user = User::create($data);
+
+            if ($data['role'] === 'editor') {
+                // Automatically create an author profile if the user is an author
+                $this->authorController->store(new Request([
+                    'user_id' => $user->id,
+                ]));
+            }
 
             return response()->json([
                 'status' => true,

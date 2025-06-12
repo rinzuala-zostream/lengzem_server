@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 class AuthorController extends Controller
 {
+
     // List all authors
     public function index(Request $request)
     {

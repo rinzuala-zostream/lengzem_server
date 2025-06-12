@@ -11,9 +11,9 @@ class AuthorController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Author::query()->with('user');
+            $query = Author::with('user')
+                ->withCount('articles'); // Count articles for each author
 
-            // Filtering by category or tag slug
             if ($request->has('user_id')) {
                 $query->where('user_id', $request->user_id);
             }
@@ -32,30 +32,10 @@ class AuthorController extends Controller
         }
     }
 
-    // Show single author
-    public function show($id)
-    {
-        try {
-            $author = Author::with('user')->findOrFail($id);
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Author retrieved successfully.',
-                'data' => $author
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to retrieve author.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
     // Create author
     public function store(Request $request)
     {
-        try { 
+        try {
             $data = $request->validate([
                 'user_id' => 'required|exists:users,id',
                 'pen_name' => 'nullable|string|max:100',

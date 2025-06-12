@@ -65,7 +65,7 @@ class UserController extends Controller
                 'id' => 'required|string|max:100',
                 'name' => 'required|string|max:100',
                 'phone' => 'required|string|max:15',
-                'email' => 'nullable|email|unique:users,email',
+                'email' => 'nullable|email|unique:user,email',
                 'role' => ['required', Rule::in(['admin', 'editor', 'reader'])],
                 'bio' => 'nullable|string',
                 'profile_image_url' => 'nullable|url',
@@ -111,7 +111,7 @@ class UserController extends Controller
             $data = $request->validate([
                 'name' => 'nullable|string|max:100',
                 'phone' => 'nullable|string|max:15',
-                'email' => ['nullable', 'email', Rule::unique('users')->ignore($user->id)],
+                'email' => ['nullable', 'email', Rule::unique('user')->ignore($user->id)],
                 'role' => ['nullable', Rule::in(['admin', 'editor', 'reader'])],
                 'bio' => 'nullable|string',
                 'profile_image_url' => 'nullable|url',
@@ -129,7 +129,7 @@ class UserController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation failed.',
-                'errors' => $e->errors()
+                'error' => $e->errors()
             ], 422);
 
         } catch (\Exception $e) {

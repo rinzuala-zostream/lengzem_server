@@ -72,6 +72,14 @@ class UserController extends Controller
             ]);
             $user = User::create($data);
 
+            if ($data['role'] === 'editor') {
+                // Automatically create an author profile if the user is an author
+                $this->authorController->store(new Request([
+                    'user_id' => $user->id,
+                    'pen_name' => $data['name'],
+                ]));
+            }
+
             return response()->json([
                 'status' => true,
                 'message' => 'User created successfully.',
@@ -82,7 +90,7 @@ class UserController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation failed.',
-                'errors' => $e->errors()
+                'error' => $e->errors()
             ], 422);
 
         } catch (\Exception $e) {

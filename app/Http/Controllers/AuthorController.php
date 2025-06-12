@@ -41,7 +41,7 @@ class AuthorController extends Controller
                 'user_id' => 'required|exists:users,id',
                 'pen_name' => 'nullable|string|max:100',
                 'bio' => 'nullable|string',
-                'social_links' => 'nullable|json',
+                'social_links' => 'nullable|string',
             ]);
 
             $author = Author::create($data);
@@ -56,7 +56,7 @@ class AuthorController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Validation failed.',
-                'errors' => $e->errors()
+                'error' => $e->errors()
             ], 422);
 
         } catch (\Exception $e) {

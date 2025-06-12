@@ -10,7 +10,7 @@ class User extends Authenticatable
     protected $table = 'user';
 
     // Primary key column name (if it's 'id' string column, specify it)
-    protected $primaryKey = 'id';
+ 
 
     // Primary key is NOT an auto-incrementing integer, but a string
     public $incrementing = false;
@@ -19,6 +19,6 @@ class User extends Authenticatable
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id', 'phone', 'num', 'name', 'email', 'role', 'bio', 'profile_image_url',
+        'id', 'phone', 'name', 'email', 'role', 'bio', 'profile_image_url',
     ];
 }

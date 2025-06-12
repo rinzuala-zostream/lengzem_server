@@ -38,7 +38,7 @@ class AuthorController extends Controller
     {
         try {
             $data = $request->validate([
-                'user_id' => 'required|exists:user,id',
+                'user_id' => 'required|string|exists:user,id',
                 'pen_name' => 'nullable|string|max:100',
                 'bio' => 'nullable|string',
                 'social_links' => 'nullable|string',

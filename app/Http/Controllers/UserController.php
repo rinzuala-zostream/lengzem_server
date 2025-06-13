@@ -106,7 +106,7 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $user = User::findOrFail($id);
+            $user = User::where('id', $id)->first();
 
             $data = $request->validate([
                 'name' => 'nullable|string|max:100',

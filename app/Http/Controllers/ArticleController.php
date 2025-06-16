@@ -56,7 +56,7 @@ class ArticleController extends Controller
                 'category',
                 'tags',
                 'media',
-            ])->withCount('comments')->findOrFail($id);
+            ])->withCount('comments')->where('id', $id)->first();
 
             return response()->json([
                 'status' => true,

@@ -20,9 +20,5 @@ class User extends Authenticatable
         'id', 'phone', 'name', 'email', 'role', 'bio', 'profile_image_url',
     ];
 
-    public function author()
-{
-    return $this->hasOne(Author::class);
-}
-
+    
 }

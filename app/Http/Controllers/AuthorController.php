@@ -33,6 +33,27 @@ class AuthorController extends Controller
         }
     }
 
+    public function show($id)
+    {
+        try {
+            $author = Author::with([
+                'user',
+                'articles',
+            ])->findOrFail($id);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Author retrieved successfully.',
+                'data' => $author,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve author.',
+            ], 404);
+        }
+    }
+
     // Create author
     public function store(Request $request)
     {

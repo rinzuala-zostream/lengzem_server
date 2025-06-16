@@ -36,10 +36,7 @@ class AuthorController extends Controller
     public function show($id)
     {
         try {
-            $author = Author::with([
-                'user',
-                'articles',
-            ])->findOrFail($id);
+            $author = Author::where('user_id', $id)->first();
 
             return response()->json([
                 'status' => true,

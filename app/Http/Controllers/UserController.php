@@ -11,17 +11,11 @@ use Illuminate\Validation\Rule;
 class UserController extends Controller
 {
 
-    protected $authorController;
-
-    public function __construct(AuthorController $authorController)
-    {
-        $this->authorController = $authorController;
-    }
     // List all users (admin only)
     public function index()
     {
         try {
-            $users = User::paginate(15);
+            $users = User::withCount('articles')->paginate(15);
 
             return response()->json([
                 'status' => true,
@@ -41,7 +35,8 @@ class UserController extends Controller
     public function show($id)
     {
         try {
-            $user = User::where('id', $id)->firstOrFail();
+            $user = User::withCount('articles')
+                ->where('id', $id)->firstOrFail();
 
             return response()->json([
                 'status' => true,
@@ -71,14 +66,6 @@ class UserController extends Controller
                 'profile_image_url' => 'nullable|url',
             ]);
             $user = User::create($data);
-
-            if ($data['role'] === 'editor') {
-                // Automatically create an author profile if the user is an author
-                $this->authorController->store(new Request([
-                    'user_id' => $user->id,
-                    'pen_name' => $data['name'],
-                ]));
-            }
 
             return response()->json([
                 'status' => true,
@@ -136,6 +123,28 @@ class UserController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update user.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Get all users with role 'editor'
+    public function getEditors()
+    {
+        try {
+            $editors = User::withCount('articles')
+                ->where('role', 'editor')
+                ->paginate(100);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Editors retrieved successfully.',
+                'data' => $editors
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve editors.',
                 'error' => $e->getMessage()
             ], 500);
         }

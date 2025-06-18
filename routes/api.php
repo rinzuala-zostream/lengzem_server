@@ -24,18 +24,13 @@ Route::get('/user', function (Request $request) {
 
 Route::middleware(['firebase.auth'])->group(function () {
     //User routes
+    Route::get('/users/editors', [UserController::class, 'getEditors']);
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::post('/users', [UserController::class, 'store']);
     Route::put('/users/{id}', [UserController::class, 'update']);
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
-
-    //Author routes
-    Route::get('/authors', [AuthorController::class, 'index']);
-    Route::get('/authors/{id}', [AuthorController::class, 'show']);
-    Route::post('/authors', [AuthorController::class, 'store']);
-    Route::put('/authors/{id}', [AuthorController::class, 'update']);
-    Route::delete('/authors/{id}', [AuthorController::class, 'destroy']);
+    
 
     //Category routes
     Route::get('/categories', [CategoryController::class, 'index']);

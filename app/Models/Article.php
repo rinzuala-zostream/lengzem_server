@@ -31,10 +31,14 @@ class Article extends Model
 
     protected $dates = ['published_at'];
 
-    // Article belongs to an Author
     public function author()
     {
-        return $this->belongsTo(Author::class);
+        return $this->belongsTo(User::class, 'author_id', 'id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'author_id', 'id');
     }
 
     // Article belongs to a Category

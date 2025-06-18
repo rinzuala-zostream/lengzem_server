@@ -11,18 +11,12 @@ class ArticleController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Article::query()->with(['author.user', 'category', 'tags']);
+            $query = Article::query()->with(['author', 'category', 'tags']);
 
             // Filtering by category or tag slug
             if ($request->has('category')) {
                 $query->whereHas('category', function ($q) use ($request) {
                     $q->where('slug', $request->category);
-                });
-            }
-
-            if ($request->has('author_id')) {
-                $query->whereHas('author', function ($q) use ($request) {
-                    $q->where('id', $request->author_id);
                 });
             }
 
@@ -52,7 +46,7 @@ class ArticleController extends Controller
     {
         try {
             $article = Article::with([
-                'author.user',
+                'author',
                 'category',
                 'tags',
                 'media',
@@ -80,7 +74,7 @@ class ArticleController extends Controller
                 'summary' => 'nullable|string',
                 'content' => 'required|string',
                 'slug' => 'nullable|string|max:255|unique:articles,slug',
-                'author_id' => 'required|exists:author,id',
+                'author_id' => 'required|exists:user,id',
                 'category_id' => 'nullable|exists:categories,id',
                 'status' => 'required|in:Draft,Published,Scheduled',
                 'scheduled_publish_time' => 'nullable|date',
@@ -134,7 +128,7 @@ class ArticleController extends Controller
                 'title' => 'sometimes|string|max:255',
                 'summary' => 'nullable|string',
                 'content' => 'sometimes|string',
-                'author_id' => 'sometimes|exists:author,id',
+                'author_id' => 'sometimes|exists:user,id',
                 'category_id' => 'nullable|exists:categories,id',
                 'slug' => 'nullable|string|max:255|unique:articles,slug',
                 'isCommentable' => 'nullable|boolean',

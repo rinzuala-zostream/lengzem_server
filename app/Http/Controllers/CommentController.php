@@ -136,12 +136,18 @@ class CommentController extends Controller
     public function destroy($articleId, $id)
     {
         try {
+            // Find the parent comment
             $comment = Comment::where('article_id', $articleId)->findOrFail($id);
+
+            // Delete all replies associated with this comment (if any)
+            $comment->replies()->delete();
+
+            // Delete the parent comment
             $comment->delete();
 
             return response()->json([
                 'status' => true,
-                'message' => 'Comment deleted successfully.'
+                'message' => 'Comment and its replies deleted successfully.'
             ]);
         } catch (\Exception $e) {
             return response()->json([

@@ -11,7 +11,7 @@ class ArticleController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Article::query()->with(['author', 'category', 'tags']);
+            $query = Article::withCount('comments')->with(['author', 'category', 'tags']);
 
             // Filtering by category or tag slug
             if ($request->has('category')) {

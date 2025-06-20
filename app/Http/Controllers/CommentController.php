@@ -71,7 +71,11 @@ class CommentController extends Controller
     public function show(Request $request, $articleId, $id)
     {
         try {
-            
+            $comment = Comment::where('article_id', $articleId)
+                ->where('id', $id)
+                ->with('user')
+                ->firstOrFail();
+
             // Get direct replies with their user and count of their own replies
             $replies = Comment::where('parent_id', $id)
                 ->with('user')             // Load user
@@ -83,7 +87,7 @@ class CommentController extends Controller
                 'status' => true,
                 'message' => 'Comment retrieved successfully.',
                 'data' => [
-                    
+                    'comment' => $comment,
                     'replies' => $replies
                 ]
             ]);

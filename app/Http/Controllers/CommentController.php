@@ -86,8 +86,8 @@ class CommentController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Comment retrieved successfully.',
+                'comment' => $comment,
                 'data' => [
-                    'comment' => $comment,
                     'replies' => $replies
                 ]
             ]);

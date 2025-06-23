@@ -17,54 +17,52 @@ class HomeController extends Controller
         $userId = $request->input('user');
         $shownArticleIds = collect();
 
-        // Trending Now: Top viewed articles (cached)
+        // Trending Now
         $trending = Cache::remember('home_trending', 60, function () {
             return Article::published()
                 ->orderByDesc('view_count')
                 ->limit(5)
                 ->get();
         });
-        $shownArticleIds = $shownArticleIds->merge($trending->pluck('id'));
+        $shownArticleIds->push(...$trending->pluck('id'));
 
-        // Editor's Picks: Popular articles with view_count > 1000 (cached)
+        // Editor's Picks
         $editorsPicks = Cache::remember('home_editors_picks', 60, function () use ($shownArticleIds) {
             return Article::published()
-                ->where('view_count', '>', 2)
+                ->where('view_count', '>', 1000)
                 ->whereNotIn('id', $shownArticleIds)
                 ->orderByDesc('view_count')
                 ->limit(5)
                 ->get();
         });
-        $shownArticleIds = $shownArticleIds->merge($editorsPicks->pluck('id'));
+        $shownArticleIds->push(...$editorsPicks->pluck('id'));
 
-        // Newly Published: Latest articles
+        // Newly Published
         $newlyPublished = Article::published()
             ->whereNotIn('id', $shownArticleIds)
             ->orderByDesc('published_at')
             ->limit(5)
             ->get();
-        $shownArticleIds = $shownArticleIds->merge($newlyPublished->pluck('id'));
+        $shownArticleIds->push(...$newlyPublished->pluck('id'));
 
-        // Categories (cached)
-        $categories = Cache::remember('home_categories', 60, function () {
-            return Category::orderBy('name')->get();
-        });
-
-        // Most Liked Articles (cached)
+        // Most Liked
         $mostLiked = Cache::remember('home_most_liked', 60, function () {
             return Article::published()
                 ->withCount([
-                    'interactions as like_count' => function ($query) {
-                        $query->where('type', 'like');
-                    }
+                    'interactions as like_count' => fn($query) => $query->where('type', 'like')
                 ])
                 ->orderByDesc('like_count')
                 ->limit(5)
                 ->get();
         });
-        $shownArticleIds = $shownArticleIds->merge($mostLiked->pluck('id'));
+        $shownArticleIds->push(...$mostLiked->pluck('id'));
 
-        // Personalized Sections
+        // Categories
+        $categories = Cache::remember('home_categories', 60, function () {
+            return Category::orderBy('name')->get();
+        });
+
+        // Personalized
         $recommended = collect();
         $fromAuthors = collect();
 
@@ -74,29 +72,24 @@ class HomeController extends Controller
                 ->with(['article.tags', 'article.author'])
                 ->get();
 
-            // Tags-based recommendation
             $likedTagIds = $interactions
-                ->flatMap(fn($interaction) => optional($interaction->article)->tags->pluck('id') ?? collect())
+                ->flatMap(fn($i) => optional($i->article)->tags->pluck('id') ?? collect())
                 ->unique();
 
             if ($likedTagIds->isNotEmpty()) {
                 $recommended = Article::published()
-                    ->whereHas('tags', function ($q) use ($likedTagIds) {
-                        $q->whereIn('tags.id', $likedTagIds);
-                    })
+                    ->whereHas('tags', fn($q) => $q->whereIn('tags.id', $likedTagIds))
                     ->whereNotIn('id', $shownArticleIds)
                     ->orderByDesc('published_at')
                     ->limit(5)
                     ->get();
-
-                $shownArticleIds = $shownArticleIds->merge($recommended->pluck('id'));
+                $shownArticleIds->push(...$recommended->pluck('id'));
             }
 
-            // From authors you've read
             $authorIds = $interactions
                 ->pluck('article.author.id')
-                ->unique()
-                ->filter();
+                ->filter()
+                ->unique();
 
             if ($authorIds->isNotEmpty()) {
                 $fromAuthors = Article::published()
@@ -105,12 +98,35 @@ class HomeController extends Controller
                     ->orderByDesc('published_at')
                     ->limit(5)
                     ->get();
-
-                $shownArticleIds = $shownArticleIds->merge($fromAuthors->pluck('id'));
+                $shownArticleIds->push(...$fromAuthors->pluck('id'));
             }
         }
 
-        // Prepare final response with resources
+        // News Nawi (latest articles from 'Nawi' category)
+        $newsNawi = Article::published()
+            ->whereHas('category', fn($q) => $q->where('name', 'Nawi'))
+            ->whereNotIn('id', $shownArticleIds)
+            ->orderByDesc('published_at')
+            ->limit(5)
+            ->get();
+        $shownArticleIds->push(...$newsNawi->pluck('id'));
+
+        // News Tawi (latest articles from 'Tawi' category)
+        $newsTawi = Article::published()
+            ->whereHas('category', fn($q) => $q->where('name', 'Tawi'))
+            ->whereNotIn('id', $shownArticleIds)
+            ->orderByDesc('published_at')
+            ->limit(5)
+            ->get();
+        $shownArticleIds->push(...$newsTawi->pluck('id'));
+
+        // Latest (newest 5 articles, ignore shown list)
+        $latest = Article::published()
+            ->orderByDesc('published_at')
+            ->limit(5)
+            ->get();
+
+        // Final Response
         $response = [
             'Trending Now' => ArticleResource::collection($trending),
             'Most Liked' => ArticleResource::collection($mostLiked),
@@ -118,12 +134,14 @@ class HomeController extends Controller
             'From Authors You Read' => ArticleResource::collection($fromAuthors),
             'Editor\'s Picks' => ArticleResource::collection($editorsPicks),
             'Newly Published' => ArticleResource::collection($newlyPublished),
+            'News Nawi' => ArticleResource::collection($newsNawi),
+            'News Tawi' => ArticleResource::collection($newsTawi),
+            'Latest' => ArticleResource::collection($latest),
             'Categories' => CategoryResource::collection($categories),
         ];
 
-        // Filter out empty sections
-        $filtered = collect($response)->filter(fn($list) => $list->count() > 0);
-
-        return response()->json($filtered);
+        return response()->json(
+            collect($response)->filter(fn($items) => $items->count() > 0)
+        );
     }
 }

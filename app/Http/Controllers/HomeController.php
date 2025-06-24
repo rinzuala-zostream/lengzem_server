@@ -129,15 +129,13 @@ class HomeController extends Controller
         // Final Response
         $response = [
             'Trending Now' => ArticleResource::collection($trending),
-            'Most Liked' => ArticleResource::collection($mostLiked),
+            'News nawi leh tawi' => ArticleResource::collection($newsNawi),
             'Recommended for You' => ArticleResource::collection($recommended),
+            'Most Liked' => ArticleResource::collection($mostLiked),
             'From Authors You Read' => ArticleResource::collection($fromAuthors),
             'Editor\'s Picks' => ArticleResource::collection($editorsPicks),
             'Newly Published' => ArticleResource::collection($newlyPublished),
-            'News Nawi' => ArticleResource::collection($newsNawi),
-            'News Tawi' => ArticleResource::collection($newsTawi),
             'Latest' => ArticleResource::collection($latest),
-            'Categories' => CategoryResource::collection($categories),
         ];
 
         return response()->json(

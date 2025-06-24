@@ -20,6 +20,7 @@ class HomeController extends Controller
         // Trending Now
         $trending = Cache::remember('home_trending', 60, function () {
             return Article::published()
+                ->with(['author', 'category', 'tags'])
                 ->orderByDesc('view_count')
                 ->limit(5)
                 ->get();
@@ -29,6 +30,7 @@ class HomeController extends Controller
         // Editor's Picks
         $editorsPicks = Cache::remember('home_editors_picks', 60, function () use ($shownArticleIds) {
             return Article::published()
+                ->with(['author', 'category', 'tags'])
                 ->where('view_count', '>', 1000)
                 ->whereNotIn('id', $shownArticleIds)
                 ->orderByDesc('view_count')
@@ -39,6 +41,7 @@ class HomeController extends Controller
 
         // Newly Published
         $newlyPublished = Article::published()
+            ->with(['author', 'category', 'tags'])
             ->whereNotIn('id', $shownArticleIds)
             ->orderByDesc('published_at')
             ->limit(5)
@@ -48,6 +51,7 @@ class HomeController extends Controller
         // Most Liked
         $mostLiked = Cache::remember('home_most_liked', 60, function () {
             return Article::published()
+                ->with(['author', 'category', 'tags'])
                 ->withCount([
                     'interactions as like_count' => fn($query) => $query->where('type', 'like')
                 ])
@@ -57,7 +61,7 @@ class HomeController extends Controller
         });
         $shownArticleIds->push(...$mostLiked->pluck('id'));
 
-        // Categories
+        // Categories (if used somewhere)
         $categories = Cache::remember('home_categories', 60, function () {
             return Category::orderBy('name')->get();
         });
@@ -78,6 +82,7 @@ class HomeController extends Controller
 
             if ($likedTagIds->isNotEmpty()) {
                 $recommended = Article::published()
+                    ->with(['author', 'category', 'tags'])
                     ->whereHas('tags', fn($q) => $q->whereIn('tags.id', $likedTagIds))
                     ->whereNotIn('id', $shownArticleIds)
                     ->orderByDesc('published_at')
@@ -93,6 +98,7 @@ class HomeController extends Controller
 
             if ($authorIds->isNotEmpty()) {
                 $fromAuthors = Article::published()
+                    ->with(['author', 'category', 'tags'])
                     ->whereIn('author_id', $authorIds)
                     ->whereNotIn('id', $shownArticleIds)
                     ->orderByDesc('published_at')
@@ -104,6 +110,7 @@ class HomeController extends Controller
 
         // News Nawi (latest articles from 'Nawi' category)
         $newsNawi = Article::published()
+            ->with(['author', 'category', 'tags'])
             ->whereHas('category', fn($q) => $q->where('name', 'Nawi'))
             ->whereNotIn('id', $shownArticleIds)
             ->orderByDesc('published_at')
@@ -113,6 +120,7 @@ class HomeController extends Controller
 
         // News Tawi (latest articles from 'Tawi' category)
         $newsTawi = Article::published()
+            ->with(['author', 'category', 'tags'])
             ->whereHas('category', fn($q) => $q->where('name', 'Tawi'))
             ->whereNotIn('id', $shownArticleIds)
             ->orderByDesc('published_at')
@@ -122,6 +130,7 @@ class HomeController extends Controller
 
         // Latest (newest 5 articles, ignore shown list)
         $latest = Article::published()
+            ->with(['author', 'category', 'tags'])
             ->orderByDesc('published_at')
             ->limit(5)
             ->get();

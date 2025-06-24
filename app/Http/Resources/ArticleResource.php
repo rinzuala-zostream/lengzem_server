@@ -15,7 +15,7 @@ class ArticleResource extends JsonResource
             'summary' => $this->summary,
             'published_at' => $this->published_at,
             'view_count' => $this->view_count,
-            'cover_image' => $this->cover_image,
+            'cover_image_url' => $this->cover_image_url,
             'author' => $this->author,
             'category' => $this->category,
             'tags' => $this->tags, // includes pivot

@@ -118,33 +118,16 @@ class HomeController extends Controller
             ->get();
         $shownArticleIds->push(...$newsNawi->pluck('id'));
 
-        // News Tawi (latest articles from 'Tawi' category)
-        $newsTawi = Article::published()
-            ->with(['author', 'category', 'tags'])
-            ->whereHas('category', fn($q) => $q->where('name', 'Tawi'))
-            ->whereNotIn('id', $shownArticleIds)
-            ->orderByDesc('published_at')
-            ->limit(5)
-            ->get();
-        $shownArticleIds->push(...$newsTawi->pluck('id'));
-
-        // Latest (newest 5 articles, ignore shown list)
-        $latest = Article::published()
-            ->with(['author', 'category', 'tags'])
-            ->orderByDesc('published_at')
-            ->limit(5)
-            ->get();
-
         // Final Response
         $response = [
             'Trending Now' => ArticleResource::collection($trending),
             'News nawi leh tawi' => ArticleResource::collection($newsNawi),
+            'Newly Published' => ArticleResource::collection($newlyPublished),
             'Recommended for You' => ArticleResource::collection($recommended),
             'Most Liked' => ArticleResource::collection($mostLiked),
             'From Authors You Read' => ArticleResource::collection($fromAuthors),
-            'Editor\'s Picks' => ArticleResource::collection($editorsPicks),
-            'Newly Published' => ArticleResource::collection($newlyPublished),
-            'Latest' => ArticleResource::collection($latest),
+            'Editor\'s Picks' => ArticleResource::collection($editorsPicks),         
+        
         ];
 
         return response()->json(

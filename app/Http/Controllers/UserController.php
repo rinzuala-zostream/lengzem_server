@@ -65,7 +65,7 @@ class UserController extends Controller
                 'bio' => 'nullable|string',
                 'profile_image_url' => 'nullable|url',
             ]);
-            $user = User::create($data);
+            $user = User::updateOrCreate(['id' => $data['id']], $data);
 
             return response()->json([
                 'status' => true,
@@ -104,7 +104,7 @@ class UserController extends Controller
                 'profile_image_url' => 'nullable|url',
             ]);
 
-            $user->update($data);
+            $user->updateOrCreate($data);
 
             return response()->json([
                 'status' => true,

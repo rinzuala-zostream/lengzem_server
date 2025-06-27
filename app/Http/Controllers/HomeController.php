@@ -22,7 +22,7 @@ class HomeController extends Controller
             return Article::published()
                 ->with(['author', 'category', 'tags'])
                 ->orderByDesc('view_count')
-                ->limit(5)
+                ->limit(20)
                 ->get();
         });
         $shownArticleIds->push(...$trending->pluck('id'));
@@ -34,7 +34,7 @@ class HomeController extends Controller
                 ->where('view_count', '>', 1000)
                 ->whereNotIn('id', $shownArticleIds)
                 ->orderByDesc('view_count')
-                ->limit(5)
+                ->limit(20)
                 ->get();
         });
         $shownArticleIds->push(...$editorsPicks->pluck('id'));
@@ -42,9 +42,8 @@ class HomeController extends Controller
         // Newly Published
         $newlyPublished = Article::published()
             ->with(['author', 'category', 'tags'])
-            ->whereNotIn('id', $shownArticleIds)
             ->orderByDesc('published_at')
-            ->limit(5)
+            ->limit(20)
             ->get();
         $shownArticleIds->push(...$newlyPublished->pluck('id'));
 
@@ -56,7 +55,7 @@ class HomeController extends Controller
                     'interactions as like_count' => fn($query) => $query->where('type', 'like')
                 ])
                 ->orderByDesc('like_count')
-                ->limit(5)
+                ->limit(20)
                 ->get();
         });
         $shownArticleIds->push(...$mostLiked->pluck('id'));
@@ -86,7 +85,7 @@ class HomeController extends Controller
                     ->whereHas('tags', fn($q) => $q->whereIn('tags.id', $likedTagIds))
                     ->whereNotIn('id', $shownArticleIds)
                     ->orderByDesc('published_at')
-                    ->limit(5)
+                    ->limit(20)
                     ->get();
                 $shownArticleIds->push(...$recommended->pluck('id'));
             }
@@ -102,7 +101,7 @@ class HomeController extends Controller
                     ->whereIn('author_id', $authorIds)
                     ->whereNotIn('id', $shownArticleIds)
                     ->orderByDesc('published_at')
-                    ->limit(5)
+                    ->limit(20)
                     ->get();
                 $shownArticleIds->push(...$fromAuthors->pluck('id'));
             }
@@ -111,10 +110,10 @@ class HomeController extends Controller
         // News Nawi (latest articles from 'Nawi' category)
         $newsNawi = Article::published()
             ->with(['author', 'category', 'tags'])
-            ->whereHas('category', fn($q) => $q->where('name', 'Nawi'))
+            ->whereHas('category', fn($q) => $q->where('name', 'News nawi leh tawi'))
             ->whereNotIn('id', $shownArticleIds)
             ->orderByDesc('published_at')
-            ->limit(5)
+            ->limit(20)
             ->get();
         $shownArticleIds->push(...$newsNawi->pluck('id'));
 

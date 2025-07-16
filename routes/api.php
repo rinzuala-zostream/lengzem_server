@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ArticleTagController;
+use App\Http\Controllers\AudioController;
 use App\Http\Controllers\CheckPendingPayment;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SubscriptionController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\MediaController;
+use App\Http\Controllers\VideoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -30,7 +32,7 @@ Route::middleware(['firebase.auth'])->group(function () {
     Route::post('/users', [UserController::class, 'store']);
     Route::put('/users/{id}', [UserController::class, 'update']);
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
-    
+
 
     //Category routes
     Route::get('/categories', [CategoryController::class, 'index']);
@@ -95,6 +97,22 @@ Route::middleware(['firebase.auth'])->group(function () {
 
 
     Route::get('/home', [HomeController::class, 'index']);
+
+    // 📽️ Video Routes
+    Route::get('/videos', [VideoController::class, 'index']);          // List all or by status
+    Route::post('/videos', [VideoController::class, 'store']);         // Create video
+    Route::get('/videos/{id}', [VideoController::class, 'show']);      // View single video (optional)
+    Route::put('/videos/{id}', [VideoController::class, 'update']);    // Update video
+    Route::delete('/videos/{id}', [VideoController::class, 'destroy']); // Delete video
+    Route::post('/videos/{id}/status', [VideoController::class, 'updateStatus']); // Update status
+
+    // 🎧 Audio Routes
+    Route::get('/audios', [AudioController::class, 'index']);          // List all or by status
+    Route::post('/audios', [AudioController::class, 'store']);         // Create audio
+    Route::get('/audios/{id}', [AudioController::class, 'show']);      // View single audio (optional)
+    Route::put('/audios/{id}', [AudioController::class, 'update']);    // Update audio
+    Route::delete('/audios/{id}', [AudioController::class, 'destroy']); // Delete audio
+    Route::post('/audios/{id}/status', [AudioController::class, 'updateStatus']); // Update status
 
 });
 

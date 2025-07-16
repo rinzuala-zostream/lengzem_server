@@ -19,6 +19,7 @@ class Article extends Model
         'scheduled_publish_time',
         'status', // draft, published, archived
         'isCommentable',
+        'isPremium',
         'cover_image_url',
         'summary',
         'published_at',
@@ -26,6 +27,7 @@ class Article extends Model
 
     protected $casts = [
         'isCommentable' => 'boolean',
+        'isPremium' => 'boolean',
 
     ];
 

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Subscription;
+use App\Models\SubscriptionPlan;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -31,36 +33,53 @@ class SubscriptionController extends Controller
     public function store(Request $request)
     {
         try {
-            // Validate the request
+            // Step 1: Validate input (except end_date/start_date logic)
             $validated = $request->validate([
-                'user_id' => 'required|exists:users,id',
+                'user_id' => 'required|exists:user,id',
                 'subscription_plan_id' => 'required|exists:subscription_plans,id',
                 'payment_id' => 'required|string',
-                'start_date' => 'required|date',
-                'end_date' => 'required|date|after_or_equal:start_date',
+                'start_date' => 'nullable|date',
                 'status' => 'in:active,expired,cancelled,pending',
             ]);
 
-            // Create the subscription
-            $subscription = Subscription::create($validated);
+            // Step 2: Use current date if start_date is not provided
+            $startDate = $request->filled('start_date') ? Carbon::parse($request->start_date) : now();
+
+            // Step 3: Get plan and calculate end_date
+            $plan = SubscriptionPlan::findOrFail($validated['subscription_plan_id']);
+            $intervalValue = $plan->interval_value;
+            $intervalUnit = $plan->interval_unit;
+
+            // Add duration to get end_date
+            $endDate = $startDate->copy()->add($intervalUnit, $intervalValue);
+
+            // Step 4: Create the subscription
+            $subscription = Subscription::create([
+                'user_id' => $validated['user_id'],
+                'subscription_plan_id' => $validated['subscription_plan_id'],
+                'payment_id' => $validated['payment_id'],
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'status' => $validated['status'] ?? 'active',
+            ]);
 
             return response()->json([
                 'status' => true,
                 'message' => 'Subscription created successfully.',
                 'data' => $subscription,
-            ], 201); // HTTP 201 Created
+            ], 201);
         } catch (ValidationException $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Validation failed.',
                 'errors' => $e->errors(),
-            ], 422); // HTTP 422 Unprocessable Entity
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'An error occurred while creating the subscription.',
                 'error' => $e->getMessage(),
-            ], 500); // HTTP 500 Internal Server Error
+            ], 500);
         }
     }
 

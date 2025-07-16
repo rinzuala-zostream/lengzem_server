@@ -32,15 +32,15 @@ class SubscriptionPlan extends Model
     {
         $array = parent::toArray();
 
-        // Format the fields
-        $array['created_at'] = $this->published_at
-            ? Carbon::parse($this->published_at)->format('F j, Y')
+        $array['created_at'] = $this->created_at
+            ? $this->created_at->format('F j, Y')
             : null;
 
-        $array['updated_at'] = $this->scheduled_publish_time
-            ? Carbon::parse($this->scheduled_publish_time)->format('F j, Y')
+        $array['updated_at'] = $this->updated_at
+            ? $this->updated_at->format('F j, Y')
             : null;
 
         return $array;
     }
+
 }

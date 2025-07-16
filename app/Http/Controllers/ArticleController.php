@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -42,15 +43,38 @@ class ArticleController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $article = Article::with([
-                'author',
-                'category',
-                'tags',
-                'media',
-            ])->withCount('comments')->findOrFail($id);
+            $user = auth()->user(); // 🔐 Get logged-in user (via middleware)
+
+            $article = Article::published()
+                ->with(['author', 'category', 'tags', 'media'])
+                ->withCount('comments')
+                ->findOrFail($id);
+
+            // 🔐 Check for premium content access
+            if ($article->isPremium) {
+                if (!$user) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Please log in to access premium content.',
+                    ], 401);
+                }
+
+                $activeSubscription = Subscription::where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->where('end_date', '>=', now())
+                    ->latest('id')
+                    ->first();
+
+                if (!$activeSubscription) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'You need an active subscription to access this article.',
+                    ], 403);
+                }
+            }
 
             return response()->json([
                 'status' => true,
@@ -82,6 +106,7 @@ class ArticleController extends Controller
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id',
                 'isCommentable' => 'nullable|boolean',
+                'isPremium' => 'nullable|boolean',
                 'published_at' => 'nullable|date',
             ]);
 
@@ -132,6 +157,7 @@ class ArticleController extends Controller
                 'category_id' => 'nullable|exists:categories,id',
                 'slug' => 'nullable|string|max:255|unique:articles,slug',
                 'isCommentable' => 'nullable|boolean',
+                'isPremium' => 'nullable|boolean',
                 'status' => 'sometimes|in:Draft,Published,Scheduled',
                 'scheduled_publish_time' => 'nullable|date',
                 'cover_image_url' => 'nullable|string',

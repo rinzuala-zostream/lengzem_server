@@ -9,6 +9,14 @@ use Illuminate\Support\Str;
 
 class ArticleController extends Controller
 {
+
+    protected $subscriptionModel;
+
+    public function __construct(Subscription $subscriptionModel)
+    {
+        $this->subscriptionModel = $subscriptionModel;
+    }
+
     public function index(Request $request)
     {
         try {
@@ -46,23 +54,23 @@ class ArticleController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $user = auth()->user(); // 🔐 Get logged-in user (via middleware)
+            $userId = $request->query('uid'); // Get user ID from query
 
             $article = Article::published()
                 ->with(['author', 'category', 'tags', 'media'])
                 ->withCount('comments')
                 ->findOrFail($id);
 
-            // 🔐 Check for premium content access
+            // 🔐 If the article is premium, check subscription
             if ($article->isPremium) {
-                if (!$user) {
+                if (!$userId) {
                     return response()->json([
                         'status' => false,
                         'message' => 'Please log in to access premium content.',
                     ], 401);
                 }
 
-                $activeSubscription = Subscription::where('user_id', $user->id)
+                $activeSubscription = Subscription::where('user_id', $userId)
                     ->where('status', 'active')
                     ->where('end_date', '>=', now())
                     ->latest('id')

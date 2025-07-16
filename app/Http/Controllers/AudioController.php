@@ -10,10 +10,8 @@ class AudioController extends Controller
     public function index(Request $request)
     {
         try {
-            $status = $request->query('status');
-            $audios = $status
-                ? AudioModel::published()->where('status', $status)->get()
-                : AudioModel::published()->get();
+
+            $audios = AudioModel::published()->paginate(10);
 
             return response()->json([
                 'status' => true,

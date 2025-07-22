@@ -38,7 +38,7 @@ class PreviewController extends Controller
 
         // Customize data fields
         $title = $record->title ?? $record->name ?? 'Untitled';
-        $description = $record->description ?? $record->bio ?? '';
+        $description = $record->summary ?? $record->bio ?? '';
         $thumbnail = $record->cover_image_url ?? $record->profile_image_url ?? '';
 
         return response()->json([

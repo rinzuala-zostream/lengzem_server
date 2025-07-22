@@ -153,7 +153,7 @@ class VideoController extends Controller
             ]);
 
             $video = videoModel::findOrFail($id);
-            $video->status = $request->status;
+            $video->status = $request->input('status');
             $video->save();
 
             return response()->json([

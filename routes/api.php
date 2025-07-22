@@ -4,6 +4,8 @@ use App\Http\Controllers\ArticleTagController;
 use App\Http\Controllers\AudioController;
 use App\Http\Controllers\CheckPendingPayment;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PreviewController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionPlanController;
 use App\Http\Controllers\UserController;
@@ -15,6 +17,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\VideoController;
+use Faker\Provider\ar_EG\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -114,5 +117,10 @@ Route::middleware(['firebase.auth'])->group(function () {
     Route::delete('/audios/{id}', [AudioController::class, 'destroy']); // Delete audio
     Route::post('/audios/{id}/status', [AudioController::class, 'updateStatus']); // Update status
 
+    //Payment routes
+    Route::get('/payments/check', [PaymentController::class, 'checkPaymentStatus']);
+
 });
+
+Route::get('/content/{type}/{id}', [PreviewController::class, 'show']);
 

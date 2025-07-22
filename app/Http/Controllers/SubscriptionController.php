@@ -11,9 +11,17 @@ use Illuminate\Validation\ValidationException;
 class SubscriptionController extends Controller
 {
     // Get all subscriptions with related plan and user
-    public function index()
+    public function index(Request $request)
     {
-        $subscriptions = Subscription::with('plan', 'user')->get();
+        $userId = $request->query('user_id'); // user_id param
+
+        $query = Subscription::with('plan', 'user');
+
+        if ($userId) {
+            $query->where('user_id', $userId);
+        }
+
+        $subscriptions = $query->get();
 
         if ($subscriptions->isEmpty()) {
             return response()->json([
@@ -60,7 +68,7 @@ class SubscriptionController extends Controller
                 'payment_id' => $validated['payment_id'],
                 'start_date' => $startDate,
                 'end_date' => $endDate,
-                'status' => $validated['status'] ?? 'active',
+                'status' => $validated['status'] ?? 'pending',
             ]);
 
             return response()->json([
@@ -112,7 +120,7 @@ class SubscriptionController extends Controller
         try {
             // Validate the request
             $validated = $request->validate([
-                'user_id' => 'sometimes|exists:users,id',
+                'user_id' => 'sometimes|exists:user,id',
                 'subscription_plan_id' => 'sometimes|exists:subscription_plans,id',
                 'payment_id' => 'sometimes|string',
                 'start_date' => 'sometimes|date',

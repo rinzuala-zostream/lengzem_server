@@ -47,7 +47,7 @@ class SubscriptionController extends Controller
                 'subscription_plan_id' => 'required|exists:subscription_plans,id',
                 'payment_id' => 'required|string',
                 'start_date' => 'nullable|date',
-                'status' => 'in:active,expired,cancelled,pending',
+                'status' => 'nullable|in:active,expired,cancelled,pending',
             ]);
 
             // Step 2: Use current date if start_date is not provided
@@ -68,7 +68,7 @@ class SubscriptionController extends Controller
                 'payment_id' => $validated['payment_id'],
                 'start_date' => $startDate,
                 'end_date' => $endDate,
-                'status' => $validated['status'] ?? 'pending',
+                'status' => empty($validated['status']) ? 'pending' : $validated['status'],
             ]);
 
             return response()->json([

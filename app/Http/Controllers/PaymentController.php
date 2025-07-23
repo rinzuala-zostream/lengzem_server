@@ -36,7 +36,7 @@ class PaymentController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'No pending payments found'
-            ], 404);
+            ]);
         }
 
         $results = [];
@@ -66,15 +66,15 @@ class PaymentController extends Controller
             }
 
             return response()->json([
-                'status' => 'success',
+                'status' => true,
                 'message' => 'Payment status checked.',
                 'data' => $results
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
+                'status' => false,
                 'message' => 'Error checking payment status: ' . $e->getMessage()
-            ], 500);
+            ]);
         }
     }
 

@@ -27,14 +27,14 @@ class SubscriptionController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'No subscriptions found',
-            ], 404);
+            ]);
         }
 
         return response()->json([
             'status' => true,
             'message' => 'Subscriptions retrieved successfully.',
             'data' => $subscriptions,
-        ], 200);
+        ]);
     }
 
     // Store a new subscription
@@ -75,19 +75,19 @@ class SubscriptionController extends Controller
                 'status' => true,
                 'message' => 'Subscription created successfully.',
                 'data' => $subscription,
-            ], 201);
+            ]);
         } catch (ValidationException $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Validation failed.',
                 'errors' => $e->errors(),
-            ], 422);
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'An error occurred while creating the subscription.',
                 'error' => $e->getMessage(),
-            ], 500);
+            ]);
         }
     }
 
@@ -102,7 +102,7 @@ class SubscriptionController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Subscription not found',
-            ], 404);
+            ]);
         }
 
         $subscription->load('plan', 'user');
@@ -111,7 +111,7 @@ class SubscriptionController extends Controller
             'status' => true,
             'message' => 'Latest subscription retrieved successfully.',
             'data' => $subscription,
-        ], 200);
+        ]);
     }
 
     // Update an existing subscription by ID
@@ -135,7 +135,7 @@ class SubscriptionController extends Controller
                 return response()->json([
                     'status' => false,
                     'message' => 'Subscription not found',
-                ], 404); // HTTP 404 Not Found
+                ]); // HTTP 404 Not Found
             }
 
             // Update the subscription
@@ -145,19 +145,19 @@ class SubscriptionController extends Controller
                 'status' => true,
                 'message' => 'Subscription updated successfully.',
                 'data' => $subscription,
-            ], 200); // HTTP 200 OK
+            ]); // HTTP 200 OK
         } catch (ValidationException $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Validation failed.',
                 'errors' => $e->errors(),
-            ], 422); // HTTP 422 Unprocessable Entity
+            ]); // HTTP 422 Unprocessable Entity
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'An error occurred while updating the subscription.',
                 'error' => $e->getMessage(),
-            ], 500); // HTTP 500 Internal Server Error
+            ]); // HTTP 500 Internal Server Error
         }
     }
 

@@ -25,7 +25,8 @@ class ArticleController extends Controller
             // Filtering by category or tag slug
             if ($request->has('category')) {
                 $query->whereHas('category', function ($q) use ($request) {
-                    $q->where('slug', $request->category);
+                    $q->where('slug', Str::slug($request->category));
+
                 });
             }
 
@@ -79,7 +80,7 @@ class ArticleController extends Controller
                 if (!$activeSubscription) {
                     return response()->json([
                         'status' => false,
-                        'message' => 'You need an active subscription to access this article.',
+                        'message' => 'He thuziak chhiar tur chuan subscription i neih a ngai, Lengzem i subscribe dawm em?.',
                     ], 403);
                 }
             }

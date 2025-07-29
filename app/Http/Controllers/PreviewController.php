@@ -43,10 +43,10 @@ class PreviewController extends Controller
         // Set default thumbnail if empty or null
         if ($type === 'listen') {
             // For Audio, check if it has a thumbnail, otherwise fallback to default image
-            $thumbnail = $record->thumbnail ?? 'https://cdn.zostream.in/Normal/Vanneihtluanga/Vanneihtluanga%20coverpg.jpg';
+            $thumbnail = $record->thumbnail_url ?? 'https://cdn.zostream.in/Normal/Vanneihtluanga/Vanneihtluanga%20coverpg.jpg';
         } elseif ($type === 'watch') {
             // For Video, check if it has a thumbnail, otherwise fallback to default image
-            $thumbnail = $record->thumbnail ?? 'https://cdn.zostream.in/Normal/Vanneihtluanga/Vanneihtluanga%20coverpg.jpg';
+            $thumbnail = $record->thumbnail_url ?? 'https://cdn.zostream.in/Normal/Vanneihtluanga/Vanneihtluanga%20coverpg.jpg';
         } else {
             // Default for other types (e.g., Article or User)
             $thumbnail = $record->cover_image_url ?? 'https://cdn.zostream.in/Normal/Vanneihtluanga/Vanneihtluanga%20coverpg.jpg';

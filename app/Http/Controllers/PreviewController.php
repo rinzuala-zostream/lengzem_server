@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\AudioModel;
 use App\Models\User;
-use App\Models\VideoModel;
+use App\Models\Video;
 
 class PreviewController extends Controller
 {
@@ -21,7 +21,7 @@ class PreviewController extends Controller
 
         // Select model based on type
         $model = match ($type) {
-            'watch' => VideoModel::class,
+            'watch' => Video::class,
             'read' => Article::class,
             'listen' => AudioModel::class,
             'view' => User::class,

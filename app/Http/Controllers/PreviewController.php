@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
-use App\Models\VideoModel;
 use App\Models\AudioModel;
 use App\Models\User;
+use App\Models\VideoModel;
 
 class PreviewController extends Controller
 {

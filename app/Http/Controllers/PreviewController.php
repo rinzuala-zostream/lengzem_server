@@ -43,6 +43,16 @@ class PreviewController extends Controller
         // Set default thumbnail if empty or null
         $thumbnail = $record->cover_image_url ?? $record->profile_image_url ?? 'https://cdn.zostream.in/Normal/Vanneihtluanga/Vanneihtluanga%20coverpg.jpg';
 
+        // Check for the author and append it to the title
+        $author = null;
+        if (method_exists($record, 'author')) {
+            $author = $record->author()->first();  // Assuming 'author' is a relationship method
+        }
+
+        if ($author) {
+            $title .= ' (by ' . $author->name . ')';
+        }
+
         return response()->json([
             'status' => true,
             'title' => $title,

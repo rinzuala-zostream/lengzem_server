@@ -39,7 +39,9 @@ class PreviewController extends Controller
         // Customize data fields
         $title = $record->title ?? $record->name ?? 'Untitled';
         $description = $record->summary ?? $record->bio ?? '';
-        $thumbnail = $record->cover_image_url ?? $record->profile_image_url ?? '';
+
+        // Set default thumbnail if empty or null
+        $thumbnail = $record->cover_image_url ?? $record->profile_image_url ?? 'https://cdn.zostream.in/Normal/Vanneihtluanga/Vanneihtluanga%20coverpg.jpg';
 
         return response()->json([
             'status' => true,

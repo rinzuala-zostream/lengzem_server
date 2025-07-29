@@ -13,8 +13,8 @@ class VideoController extends Controller
         try {
             $status = $request->query('status');
             $videos = $status
-                ? videoModel::published()->where('status', $status)->get()
-                : videoModel::published()->get();
+                ? videoModel::with('author')->where('status', $status)->paginate(10)
+                : videoModel::with('author')->published()->paginate(10);
 
             return response()->json([
                 'status' => true,

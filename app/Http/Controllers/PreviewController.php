@@ -40,6 +40,22 @@ class PreviewController extends Controller
         $title = $record->title ?? $record->name ?? 'Untitled';
         $description = $record->summary ?? $record->bio ?? '';
 
+        // Add prefix to the title based on the content type
+        switch ($type) {
+            case 'listen':
+                $title = "Listen to " . $title;
+                break;
+            case 'watch':
+                $title = "Watch " . $title;
+                break;
+            case 'read':
+                $title = "Read " . $title;
+                break;
+            default:
+                // For other types (e.g., 'view'), no prefix is added
+                break;
+        }
+
         // Set default thumbnail if empty or null
         if ($type === 'listen') {
             // For Audio, check if it has a thumbnail, otherwise fallback to default image

@@ -5,7 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
-class videoModel extends Model
+class VideoModel extends Model
 {
     protected $table = 'video';
 

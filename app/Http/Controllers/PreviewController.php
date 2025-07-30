@@ -38,7 +38,7 @@ class PreviewController extends Controller
 
         // Customize data fields
         $title = $record->title ?? $record->name ?? 'Untitled';
-        $description = $record->summary ?? $record->bio ?? '';
+        
 
         // Add prefix to the title based on the content type
         switch ($type) {
@@ -60,12 +60,19 @@ class PreviewController extends Controller
         if ($type === 'listen') {
             // For Audio, check if it has a thumbnail, otherwise fallback to default image
             $thumbnail = $record->thumbnail_url ?? 'https://cdn.zostream.in/Normal/Vanneihtluanga/Vanneihtluanga%20coverpg.jpg';
+            $description = $record->description ?? $record->summary ?? '';
         } elseif ($type === 'watch') {
             // For Video, check if it has a thumbnail, otherwise fallback to default image
             $thumbnail = $record->thumbnail_url ?? 'https://cdn.zostream.in/Normal/Vanneihtluanga/Vanneihtluanga%20coverpg.jpg';
-        } else {
+            $description = $record->description ?? $record->summary ?? '';
+        } elseif ($type === 'read') {
             // Default for other types (e.g., Article or User)
             $thumbnail = $record->cover_image_url ?? 'https://cdn.zostream.in/Normal/Vanneihtluanga/Vanneihtluanga%20coverpg.jpg';
+            $description = $record->summary ?? $record->description ?? '';
+        } else {
+            // Default for other types (e.g., Article or User)
+            $thumbnail = $record->profile_image_url ?? 'https://cdn.zostream.in/Normal/Vanneihtluanga/Vanneihtluanga%20coverpg.jpg';
+            $description = $record->bio ?? $record->summary ?? '';
         }
 
         // Check for the author and append it to the title

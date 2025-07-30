@@ -55,32 +55,52 @@ class UserController extends Controller
     // Create new user
     public function store(Request $request)
     {
+        try {
+            // Validate the incoming request
+            $data = $request->validate([
+                'id' => 'required|string|max:100',
+                'name' => 'required|string|max:100',
+                'phone' => 'required|string|max:15',
+                'email' => 'nullable|email', // Allow email without uniqueness check
+                'role' => ['required', Rule::in(['admin', 'editor', 'reader'])],
+                'bio' => 'nullable|string',
+                'profile_image_url' => 'nullable|url',
+            ]);
 
-        $data = $request->validate([
-            'id' => 'required|string|max:100',
-            'name' => 'required|string|max:100',
-            'phone' => 'required|string|max:15',
-            'email' => 'nullable|email|unique:user,email',
-            'role' => ['required', Rule::in(['admin', 'editor', 'reader'])],
-            'bio' => 'nullable|string',
-            'profile_image_url' => 'nullable|url',
-        ]);
+            // Check if the email already exists within the same user
+            if ($data['email']) {
+                $existingUser = User::where('email', $data['email'])->where('id', '!=', $data['id'])->first();
+                if ($existingUser) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'This email is already associated with another user.',
+                    ], 422);
+                }
+            }
 
-        // Check if the email already exists
-        if ($data['email'] && User::where('email', $data['email'])->exists()) {
+            // Create or update the user
+            $user = User::updateOrCreate(['id' => $data['id']], $data);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'User created successfully.',
+                'data' => $user
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Email already in use.',
-            ]);
+                'message' => 'Validation failed.',
+                'error' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to create user.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $user = User::updateOrCreate(['id' => $data['id']], $data);
-
-        return response()->json([
-            'status' => true,
-            'message' => 'User created successfully.',
-            'data' => $user
-        ]);
     }
 
     // Update user

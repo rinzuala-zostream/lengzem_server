@@ -62,6 +62,7 @@ class VideoController extends Controller
                 'duration' => 'nullable',
                 'release_date' => 'nullable|date',
                 'status' => 'required|in:draft,scheduled,published',
+                'author_id' => 'required|exists:user,id', // Ensure author_id is provided and valid
             ]);
 
             $video = videoModel::create($validated);

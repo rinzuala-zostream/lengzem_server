@@ -11,7 +11,10 @@ class AudioController extends Controller
     {
         try {
 
-            $audios = AudioModel::published()->paginate(10);
+            $status = $request->query('status');
+            $audios = $status
+                ? AudioModel::with('author')->where('status', $status)->paginate(10)
+                : AudioModel::with('author')->published()->paginate(10);
 
             return response()->json([
                 'status' => true,
@@ -56,6 +59,7 @@ class AudioController extends Controller
                 'duration' => 'nullable',
                 'release_date' => 'nullable|date',
                 'status' => 'required|in:draft,scheduled,published',
+                'author_id' => 'required|exists:user,id', // Ensure author_id is provided and valid
             ]);
 
             $audio = AudioModel::create($data);

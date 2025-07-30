@@ -60,11 +60,20 @@ class UserController extends Controller
                 'id' => 'required|string|max:100',
                 'name' => 'required|string|max:100',
                 'phone' => 'required|string|max:15',
-                'email' => 'nullable|email',
+                'email' => 'nullable|email|unique:user,email',
                 'role' => ['required', Rule::in(['admin', 'editor', 'reader'])],
                 'bio' => 'nullable|string',
                 'profile_image_url' => 'nullable|url',
             ]);
+
+            // Check if the email already exists
+            if ($data['email'] && User::where('email', $data['email'])->exists()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Email already in use.',
+                ], 422);
+            }
+
             $user = User::updateOrCreate(['id' => $data['id']], $data);
 
             return response()->json([

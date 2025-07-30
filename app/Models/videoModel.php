@@ -18,6 +18,8 @@ class VideoModel extends Model
         'release_date',
         'status',
         'author_id',  // Add 'author_id' to the fillable attributes
+        'url',  // Optional field for video URL
+        
     ];
 
     protected $casts = [

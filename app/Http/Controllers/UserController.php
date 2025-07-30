@@ -74,7 +74,7 @@ class UserController extends Controller
                     return response()->json([
                         'status' => false,
                         'message' => 'This email is already associated with another user.',
-                    ], 422);
+                    ]);
                 }
             }
 
@@ -85,21 +85,21 @@ class UserController extends Controller
                 'status' => true,
                 'message' => 'User created successfully.',
                 'data' => $user
-            ], 201);
+            ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Validation failed.',
                 'error' => $e->errors()
-            ], 422);
+            ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create user.',
                 'error' => $e->getMessage()
-            ], 500);
+            ]);
         }
     }
 

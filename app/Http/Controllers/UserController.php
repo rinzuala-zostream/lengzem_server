@@ -27,7 +27,7 @@ class UserController extends Controller
                 'status' => false,
                 'message' => 'Failed to retrieve users.',
                 'error' => $e->getMessage()
-            ], 500);
+            ]);
         }
     }
 
@@ -48,7 +48,7 @@ class UserController extends Controller
                 'status' => false,
                 'message' => 'Failed to retrieve user.',
                 'error' => $e->getMessage()
-            ], 500);
+            ]);
         }
     }
 
@@ -65,27 +65,27 @@ class UserController extends Controller
                 'bio' => 'nullable|string',
                 'profile_image_url' => 'nullable|url',
             ]);
-            $user = User::updateOrCreate(['id' => $data['id']], $data);
+            $user = User::create($data);
 
             return response()->json([
                 'status' => true,
                 'message' => 'User created successfully.',
                 'data' => $user
-            ], 201);
+            ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Validation failed.',
                 'error' => $e->errors()
-            ], 422);
+            ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create user.',
                 'error' => $e->getMessage()
-            ], 500);
+            ]);
         }
     }
 
@@ -104,7 +104,7 @@ class UserController extends Controller
                 'profile_image_url' => 'nullable|url',
             ]);
 
-            $user->updateOrCreate($data);
+            $user->update($data);
 
             return response()->json([
                 'status' => true,
@@ -117,14 +117,14 @@ class UserController extends Controller
                 'status' => false,
                 'message' => 'Validation failed.',
                 'error' => $e->errors()
-            ], 422);
+            ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to update user.',
                 'error' => $e->getMessage()
-            ], 500);
+            ]);
         }
     }
 

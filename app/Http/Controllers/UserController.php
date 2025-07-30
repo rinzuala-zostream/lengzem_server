@@ -82,12 +82,6 @@ class UserController extends Controller
                 'data' => $user
             ]);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation failed.',
-                'error' => $e->errors()
-            ]);
 
         } catch (\Exception $e) {
             return response()->json([

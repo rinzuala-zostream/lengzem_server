@@ -55,41 +55,32 @@ class UserController extends Controller
     // Create new user
     public function store(Request $request)
     {
-        try {
-            $data = $request->validate([
-                'id' => 'required|string|max:100',
-                'name' => 'required|string|max:100',
-                'phone' => 'required|string|max:15',
-                'email' => 'nullable|email|unique:user,email',
-                'role' => ['required', Rule::in(['admin', 'editor', 'reader'])],
-                'bio' => 'nullable|string',
-                'profile_image_url' => 'nullable|url',
-            ]);
 
-            // Check if the email already exists
-            if ($data['email'] && User::where('email', $data['email'])->exists()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Email already in use.',
-                ]);
-            }
+        $data = $request->validate([
+            'id' => 'required|string|max:100',
+            'name' => 'required|string|max:100',
+            'phone' => 'required|string|max:15',
+            'email' => 'nullable|email|unique:user,email',
+            'role' => ['required', Rule::in(['admin', 'editor', 'reader'])],
+            'bio' => 'nullable|string',
+            'profile_image_url' => 'nullable|url',
+        ]);
 
-            $user = User::updateOrCreate(['id' => $data['id']], $data);
-
-            return response()->json([
-                'status' => true,
-                'message' => 'User created successfully.',
-                'data' => $user
-            ]);
-
-
-        } catch (\Exception $e) {
+        // Check if the email already exists
+        if ($data['email'] && User::where('email', $data['email'])->exists()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to create user.',
-                'error' => $e->getMessage()
+                'message' => 'Email already in use.',
             ]);
         }
+
+        $user = User::updateOrCreate(['id' => $data['id']], $data);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'User created successfully.',
+            'data' => $user
+        ]);
     }
 
     // Update user

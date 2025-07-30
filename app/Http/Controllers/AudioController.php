@@ -75,7 +75,7 @@ class AudioController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Validation failed.',
+                'message' => 'Validation failed. ' . $e->getMessage(),
                 'error' => $e->errors()
             ], 422);
         } catch (\Exception $e) {

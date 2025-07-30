@@ -63,6 +63,7 @@ class VideoController extends Controller
                 'release_date' => 'nullable|date',
                 'status' => 'required|in:draft,scheduled,published',
                 'author_id' => 'required|exists:user,id', // Ensure author_id is provided and valid
+                'is_premium' => 'nullable|boolean', // Optional field for premium content
             ]);
 
             $video = videoModel::create($validated);
@@ -101,6 +102,8 @@ class VideoController extends Controller
                 'duration' => 'nullable',
                 'release_date' => 'nullable|date',
                 'status' => 'in:draft,scheduled,published',
+                'author_id' => 'sometimes|required|exists:user,id', // Ensure author_id is valid if provided
+                'is_premium' => 'nullable|boolean', // Optional field for premium content
             ]);
 
             $video->update($validated);

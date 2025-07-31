@@ -118,14 +118,21 @@ class VideoController extends Controller
             preg_match('/PT((\d+)H)?((\d+)M)?((\d+(\.\d+)?)S)?/', $iso, $m);
             $hours = isset($m[2]) ? (int) $m[2] : 0;
             $minutes = isset($m[4]) ? (int) $m[4] : 0;
-            $seconds = isset($m[6]) ? round((float) $m[6]) : 0;
+            $seconds = isset($m[6]) ? (float) $m[6] : 0;
 
-            return sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+            $totalSeconds = ($hours * 3600) + ($minutes * 60) + $seconds;
+
+            // Properly normalize into HH:MM:SS
+            $hh = floor($totalSeconds / 3600);
+            $mm = floor(($totalSeconds % 3600) / 60);
+            $ss = floor($totalSeconds % 60);
+
+            return sprintf('%02d:%02d:%02d', $hh, $mm, $ss);
         } catch (\Exception $e) {
             return '00:00:00';
         }
     }
-
+    
     // Update video
     public function update(Request $request, $id)
     {

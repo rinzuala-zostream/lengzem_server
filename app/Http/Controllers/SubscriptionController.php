@@ -48,6 +48,7 @@ class SubscriptionController extends Controller
                 'payment_id' => 'required|string',
                 'start_date' => 'nullable|date',
                 'status' => 'nullable|in:active,expired,cancelled,pending',
+                'amount' => 'nullable|numeric|min:0', // Optional amount field
             ]);
 
             // Step 2: Use current date if start_date is not provided
@@ -69,6 +70,7 @@ class SubscriptionController extends Controller
                 'start_date' => $startDate,
                 'end_date' => $endDate,
                 'status' => empty($validated['status']) ? 'pending' : $validated['status'],
+                'amount' => $request->get('amount', 0), // Default to 0 if not provided
             ]);
 
             return response()->json([
@@ -126,6 +128,7 @@ class SubscriptionController extends Controller
                 'start_date' => 'sometimes|date',
                 'end_date' => 'sometimes|date|after_or_equal:start_date',
                 'status' => 'sometimes|in:active,expired,cancelled,pending',
+                'amount' => 'sometimes|numeric|min:0', // Optional amount field
             ]);
 
             // Find the subscription

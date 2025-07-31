@@ -18,6 +18,7 @@ class AudioModel extends Model
         'release_date',
         'status',
         'author_id',  // Add 'author_id' to the fillable attributes
+        'url'
     ];
 
     protected $casts = [

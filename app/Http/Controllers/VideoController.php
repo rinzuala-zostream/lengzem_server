@@ -60,7 +60,7 @@ class VideoController extends Controller
                 'description' => 'nullable|string',
                 'language' => 'nullable|string|max:50',
                 'thumbnail_url' => 'nullable|url',
-                'duration' => 'nullable',
+                'duration' => 'nullable|string', // ensure it's a string since we store HH:MM:SS
                 'release_date' => 'nullable|date',
                 'status' => 'required|in:draft,scheduled,published',
                 'author_id' => 'required|exists:user,id',
@@ -68,23 +68,9 @@ class VideoController extends Controller
                 'url' => 'required|url',
             ]);
 
-            // If duration is empty, extract from MPD
+            // If duration is not provided, try extracting from MPD manifest
             if (empty($validated['duration'])) {
-                try {
-                    $response = Http::get($validated['url']);
-                    if ($response->ok()) {
-                        $xml = simplexml_load_string($response->body());
-                        $xml->registerXPathNamespace('mpd', 'urn:mpeg:dash:schema:mpd:2011');
-                        $durations = $xml->xpath('//mpd:MPD/@mediaPresentationDuration');
-
-                        if (!empty($durations)) {
-                            $durationIso = (string) $durations[0];
-                            $validated['duration'] = self::convertIso8601ToHms($durationIso);
-                        }
-                    }
-                } catch (\Exception $e) {
-                    // Fail silently, duration will remain null
-                }
+                $validated['duration'] = $this->extractDurationFromMPD($validated['url']) ?? '00:00:00';
             }
 
             $video = videoModel::create($validated);
@@ -94,6 +80,7 @@ class VideoController extends Controller
                 'message' => 'Video created successfully.',
                 'data' => $video
             ], 201);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'status' => false,
@@ -109,17 +96,33 @@ class VideoController extends Controller
         }
     }
 
-    private static function convertIso8601ToHms($isoDuration)
+    private function extractDurationFromMPD($mpdUrl)
     {
         try {
-            $interval = new \DateInterval($isoDuration);
-            $hours = $interval->h + ($interval->d * 24);
-            $minutes = $interval->i;
-            $seconds = $interval->s;
+            $response = Http::get(str_replace(" ", "%20", $mpdUrl));
+            if ($response->ok()) {
+                $xml = simplexml_load_string($response->body());
+                $durationIso = (string) $xml['mediaPresentationDuration'];
+                return $this->convertIso8601ToHms($durationIso);
+            }
+        } catch (\Exception $e) {
+            // Silent fail, fallback handled in store()
+        }
+
+        return null;
+    }
+
+    private function convertIso8601ToHms($iso)
+    {
+        try {
+            preg_match('/PT((\d+)H)?((\d+)M)?((\d+(\.\d+)?)S)?/', $iso, $m);
+            $hours = isset($m[2]) ? (int) $m[2] : 0;
+            $minutes = isset($m[4]) ? (int) $m[4] : 0;
+            $seconds = isset($m[6]) ? round((float) $m[6]) : 0;
 
             return sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
         } catch (\Exception $e) {
-            return null; // return null on failure
+            return '00:00:00';
         }
     }
 

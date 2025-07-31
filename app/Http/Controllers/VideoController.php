@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\videoModel;
+use Http;
 use Illuminate\Http\Request;
 
 class VideoController extends Controller
@@ -62,10 +63,29 @@ class VideoController extends Controller
                 'duration' => 'nullable',
                 'release_date' => 'nullable|date',
                 'status' => 'required|in:draft,scheduled,published',
-                'author_id' => 'required|exists:user,id', // Ensure author_id is provided and valid
-                'is_premium' => 'nullable|boolean', // Optional field for premium content
-                'url' => 'required|url', // Optional field for video URL
+                'author_id' => 'required|exists:user,id',
+                'is_premium' => 'nullable|boolean',
+                'url' => 'required|url',
             ]);
+
+            // If duration is empty, extract from MPD
+            if (empty($validated['duration'])) {
+                try {
+                    $response = Http::get($validated['url']);
+                    if ($response->ok()) {
+                        $xml = simplexml_load_string($response->body());
+                        $xml->registerXPathNamespace('mpd', 'urn:mpeg:dash:schema:mpd:2011');
+                        $durations = $xml->xpath('//mpd:MPD/@mediaPresentationDuration');
+
+                        if (!empty($durations)) {
+                            $durationIso = (string) $durations[0];
+                            $validated['duration'] = self::convertIso8601ToHms($durationIso);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Fail silently, duration will remain null
+                }
+            }
 
             $video = videoModel::create($validated);
 
@@ -86,6 +106,20 @@ class VideoController extends Controller
                 'message' => 'Failed to create video.',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    private static function convertIso8601ToHms($isoDuration)
+    {
+        try {
+            $interval = new \DateInterval($isoDuration);
+            $hours = $interval->h + ($interval->d * 24);
+            $minutes = $interval->i;
+            $seconds = $interval->s;
+
+            return sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+        } catch (\Exception $e) {
+            return null; // return null on failure
         }
     }
 

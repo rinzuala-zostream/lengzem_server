@@ -58,9 +58,9 @@ class UserController extends Controller
         try {
             // Validate the incoming request
             $data = $request->validate([
-                'id' => 'required|string|max:100',
-                'name' => 'required|string|max:100',
-                'phone' => 'required|string|max:15',
+                'id' => 'nullable|string|max:100',
+                'name' => 'nullable|string|max:100',
+                'phone' => 'nullable|string|max:15',
                 'email' => 'nullable|email', // Allow email without uniqueness check
                 'role' => ['nullable', Rule::in(['admin', 'editor', 'reader'])],
                 'bio' => 'nullable|string',

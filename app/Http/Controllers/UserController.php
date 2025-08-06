@@ -65,6 +65,7 @@ class UserController extends Controller
                 'role' => ['required', Rule::in(['admin', 'editor', 'reader'])],
                 'bio' => 'nullable|string',
                 'profile_image_url' => 'nullable|url',
+                'token' => 'nullable|string|max:255',
             ]);
 
             // Check if the email already exists within the same user
@@ -116,6 +117,7 @@ class UserController extends Controller
                 'role' => ['nullable', Rule::in(['admin', 'editor', 'reader'])],
                 'bio' => 'nullable|string',
                 'profile_image_url' => 'nullable|url',
+                'token' => 'nullable|string|max:255',
             ]);
 
             $user->updateOrCreate($data);

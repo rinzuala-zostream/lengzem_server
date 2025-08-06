@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdController;
 use App\Http\Controllers\ArticleTagController;
 use App\Http\Controllers\AudioController;
 use App\Http\Controllers\CheckPendingPayment;
@@ -119,6 +120,11 @@ Route::middleware(['firebase.auth'])->group(function () {
 
     //Payment routes
     Route::get('/payments/check', [PaymentController::class, 'checkPaymentStatus']);
+
+    //Ads routes
+    Route::get('/ads', [AdController::class, 'index']);
+    Route::get('/ads/{id}', [AdController::class, 'show']);
+    Route::post('/ads', [AdController::class, 'store']);
 
 });
 

@@ -24,6 +24,7 @@ class User extends Authenticatable
         'role',
         'bio',
         'profile_image_url',
+        'token',
     ];
 
     public function articles()

@@ -58,7 +58,7 @@ class UserController extends Controller
         try {
             // Validate the incoming request
             $data = $request->validate([
-                'id' => 'nullable|string|max:100',
+                'id' => 'required|string|max:100',
                 'name' => 'nullable|string|max:100',
                 'phone' => 'nullable|string|max:15',
                 'email' => 'nullable|email', // Allow email without uniqueness check
@@ -69,7 +69,7 @@ class UserController extends Controller
             ]);
 
             // Check if the email already exists within the same user
-            if ($data['email']) {
+            if (!empty($data['email'])) {
                 $existingUser = User::where('email', $data['email'])->where('id', '!=', $data['id'])->first();
                 if ($existingUser) {
                     return response()->json([

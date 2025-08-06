@@ -62,10 +62,10 @@ class UserController extends Controller
                 'name' => 'required|string|max:100',
                 'phone' => 'required|string|max:15',
                 'email' => 'nullable|email', // Allow email without uniqueness check
-                'role' => ['required', Rule::in(['admin', 'editor', 'reader'])],
+                'role' => ['nullable', Rule::in(['admin', 'editor', 'reader'])],
                 'bio' => 'nullable|string',
                 'profile_image_url' => 'nullable|url',
-                'token' => 'nullable|string|max:255',
+                'token' => 'nullable|string',
             ]);
 
             // Check if the email already exists within the same user
@@ -117,7 +117,7 @@ class UserController extends Controller
                 'role' => ['nullable', Rule::in(['admin', 'editor', 'reader'])],
                 'bio' => 'nullable|string',
                 'profile_image_url' => 'nullable|url',
-                'token' => 'nullable|string|max:255',
+                'token' => 'nullable|string',
             ]);
 
             $user->updateOrCreate($data);

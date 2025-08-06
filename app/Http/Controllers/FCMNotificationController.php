@@ -14,8 +14,10 @@ class FCMNotificationController extends Controller
         $body = $request->input('body', '');
         $image = $request->input('image', '');
         $key = $request->input('key');
+        $type = $request->input('type', 'topic'); // 'topic' or 'token'
+        $recipient = $request->input('recipient', 'all'); // token or topic name
 
-        // Load credentials from JSON file
+        // Load credentials
         $jsonPath = storage_path('app/firebase/lengzem.json');
         if (!file_exists($jsonPath)) {
             return response()->json(['error' => 'Firebase credentials not found'], 500);
@@ -27,7 +29,7 @@ class FCMNotificationController extends Controller
         }
 
         $accessToken = $this->getAccessToken($serviceAccountData);
-        $response = $this->sendNotification($accessToken, $title, $body, $image, $key);
+        $response = $this->sendNotification($accessToken, $title, $body, $image, $key, $type, $recipient);
 
         return response()->json($response);
     }
@@ -69,20 +71,21 @@ class FCMNotificationController extends Controller
         return $data['access_token'];
     }
 
-    private function sendNotification($accessToken, $title, $body, $image, $key = null)
+    private function sendNotification($accessToken, $title, $body, $image, $key = null, $type = 'topic', $recipient = 'all')
     {
         $client = new Client();
         $url = 'https://fcm.googleapis.com/v1/projects/lengzem-app-bd7eb/messages:send';
 
+        $target = $type === 'token' ? ['token' => $recipient] : ['topic' => $recipient];
+
         $message = [
-            "message" => [
-                "topic" => "all",
+            "message" => array_merge($target, [
                 "notification" => [
                     "title" => $title,
                     "body" => $body,
                     "image" => $image
                 ]
-            ]
+            ])
         ];
 
         if ($key !== null) {

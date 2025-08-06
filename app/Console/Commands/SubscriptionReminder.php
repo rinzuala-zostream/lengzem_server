@@ -41,9 +41,11 @@ class SubscriptionReminder extends Command
                 $message = "{$plan->name} plan will expire on {$subscription->end_date->format('F j, Y')}.";
 
                 $fakeRequest = new Request([
+                    'type' => 'token',
+                    'recipient' => $user->token,
                     'title' => $title,
                     'body' => $message,
-                    'image' => $plan->image ?? '',
+                    //'image' => $plan->image ?? '',
                     //'key' => $plan->id ?? '',
                 ]);
 

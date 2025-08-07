@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Subscription;
 use App\Models\videoModel;
 use Http;
 use Illuminate\Http\Request;
@@ -32,10 +33,32 @@ class VideoController extends Controller
     }
 
     // Show a single video
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
+            $userId = $request->query('uid');
             $video = videoModel::published()->findOrFail($id);
+
+            if ($video->is_premium) {
+                if (!$userId) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Please log in to access premium content.',
+                    ], 401);
+                }
+
+                $activeSubscription = Subscription::where('user_id', $userId)
+                    ->where('status', 'active')
+                    ->latest('id')
+                    ->first();
+
+                if (!$activeSubscription) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'He content en tur chuan subscription i neih a ngai, Lengzem i subscribe dawm em?.',
+                    ], 403);
+                }
+            }
 
             return response()->json([
                 'status' => true,
@@ -132,7 +155,7 @@ class VideoController extends Controller
             return '00:00:00';
         }
     }
-    
+
     // Update video
     public function update(Request $request, $id)
     {

@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command("app:ads-schedule")->daily();
 Schedule::command("app:subscription-reminder")->dailyAt('10:00');
+Schedule::command("app:subscription-schedule")->daily();

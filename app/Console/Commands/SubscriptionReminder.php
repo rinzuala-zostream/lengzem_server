@@ -38,7 +38,8 @@ class SubscriptionReminder extends Command
             foreach ($subscriptions as $subscription) {
                 $user = $subscription->user;
                 $plan = $subscription->plan;
-                $message = "{$plan->name} plan will expire on {$subscription->end_date->format('F j, Y')}.";
+                $endDate = \Carbon\Carbon::parse((string)$subscription->end_date)->format('F j, Y');
+                $message = "{$plan->name} plan will expire on {$endDate}.";
 
                 $fakeRequest = new Request([
                     'type' => 'token',

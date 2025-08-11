@@ -32,8 +32,8 @@ class SubscriptionSchedule extends Command
         $subscriptions = Subscription::all();
 
         foreach ($subscriptions as $subscription) {
-            $start = Carbon::parse($subscription->start_date);
-            $end = Carbon::parse($subscription->end_date);
+            $start = Carbon::parse((string) $subscription->start_date);
+            $end = Carbon::parse((string) $subscription->end_date);
             $newStatus = null;
 
             if ($now->between($start, $end)) {

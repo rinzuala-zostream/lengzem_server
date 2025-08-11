@@ -127,16 +127,6 @@ class ArticleController extends Controller
                 'published_at' => 'nullable|date',
             ];
 
-            // Extra constraints depending on status
-            if ($status === 'scheduled') {
-                // require future schedule
-                $rules['scheduled_publish_time'] .= '|after:now';
-            }
-            if ($status === 'published') {
-                // published_at must be <= now if provided
-                $rules['published_at'] .= '|before_or_equal:now';
-            }
-
             $data = $request->validate($rules);
 
             // Normalize status casing

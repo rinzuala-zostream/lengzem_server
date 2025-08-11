@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\FCMNotificationController;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
@@ -38,7 +39,7 @@ class SubscriptionReminder extends Command
             foreach ($subscriptions as $subscription) {
                 $user = $subscription->user;
                 $plan = $subscription->plan;
-                $endDate = \Carbon\Carbon::parse((string)$subscription->end_date)->format('F j, Y');
+                $endDate = Carbon::parse((string)$subscription->end_date)->format('F j, Y');
                 $message = "{$plan->name} plan will expire on {$endDate}.";
 
                 $fakeRequest = new Request([

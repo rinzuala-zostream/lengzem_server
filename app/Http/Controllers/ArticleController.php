@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\Subscription;
+use Carbon\Carbon;
+use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -12,9 +14,12 @@ class ArticleController extends Controller
 
     protected $subscriptionModel;
 
-    public function __construct(Subscription $subscriptionModel)
+    protected $fcm;
+
+    public function __construct(Subscription $subscriptionModel, FCMNotificationController $fCMNotificationController)
     {
         $this->subscriptionModel = $subscriptionModel;
+        $this->fcm = $fCMNotificationController;
     }
 
     public function index(Request $request)
@@ -101,49 +106,118 @@ class ArticleController extends Controller
     public function store(Request $request)
     {
         try {
-            $data = $request->validate([
+            // Normalize status to lowercase for consistency with DB enums
+            $status = strtolower((string) $request->input('status'));
+
+            // Base rules
+            $rules = [
                 'title' => 'required|string|max:255',
                 'summary' => 'nullable|string',
                 'content' => 'required|string',
                 'slug' => 'nullable|string|max:255|unique:articles,slug',
                 'author_id' => 'required|exists:user,id',
                 'category_id' => 'nullable|exists:categories,id',
-                'status' => 'required|in:Draft,Published,Scheduled',
+                'status' => 'required|in:Draft,Published,Scheduled,draft,published,scheduled',
                 'scheduled_publish_time' => 'nullable|date',
-                'cover_image_url' => 'nullable|string',
+                'cover_image_url' => 'nullable|string', // change to 'url' if always absolute
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id',
                 'isCommentable' => 'nullable|boolean',
                 'isPremium' => 'nullable|boolean',
                 'published_at' => 'nullable|date',
-            ]);
+            ];
 
-            // Set published_at to now if not provided
-            if (empty($data['published_at'])) {
-                $data['published_at'] = now();
+            // Extra constraints depending on status
+            if ($status === 'scheduled') {
+                // require future schedule
+                $rules['scheduled_publish_time'] .= '|after:now';
+            }
+            if ($status === 'published') {
+                // published_at must be <= now if provided
+                $rules['published_at'] .= '|before_or_equal:now';
             }
 
-            // Auto-generate slug if not provided
-            $data['slug'] = $data['slug'] ?? Str::slug($data['title']);
+            $data = $request->validate($rules);
 
+            // Normalize status casing
+            $data['status'] = $status; // 'draft' | 'published' | 'scheduled'
+
+            // Auto-generate slug if not provided, ensure uniqueness
+            $baseSlug = $data['slug'] ?? Str::slug($data['title']);
+            $slug = $baseSlug;
+            $i = 1;
+            while (Article::where('slug', $slug)->exists()) {
+                $slug = $baseSlug . '-' . $i++;
+            }
+            $data['slug'] = $slug;
+
+            // Timestamps logic
+            if ($data['status'] === 'published') {
+                // Set published_at to now if not provided
+                $data['published_at'] = !empty($data['published_at'])
+                    ? Carbon::parse($data['published_at'])
+                    : now();
+                // a published article shouldn't carry a scheduled time
+                $data['scheduled_publish_time'] = null;
+            } elseif ($data['status'] === 'scheduled') {
+                // ensure scheduled_publish_time exists (rule above enforces) and clear published_at
+                $data['published_at'] = null;
+            } else { // draft
+                $data['published_at'] = null;
+                $data['scheduled_publish_time'] = null;
+            }
+
+            // Default booleans
+            $data['isCommentable'] = array_key_exists('isCommentable', $data) ? (bool) $data['isCommentable'] : true;
+            $data['isPremium'] = array_key_exists('isPremium', $data) ? (bool) $data['isPremium'] : false;
+
+            /** @var Article $article */
             $article = Article::create($data);
 
             if (!empty($data['tags'])) {
                 $article->tags()->sync($data['tags']);
             }
 
+            // Try FCM only when published
+            if ($data['status'] === 'published') {
+                try {
+                    // Build a concise body from summary or content
+                    $bodyText = $data['summary'] ?? Str::limit(strip_tags($data['content']), 140);
+                    $fakeRequest = new Request([
+                        'type' => 'topic',
+                        'recipient' => 'all',
+                        'title' => $data['title'],
+                        'body' => $bodyText,
+                        'image' => $data['cover_image_url'] ?? '',
+                        'key' => (string) $article->id, // or slug if you prefer
+                    ]);
+                    // Assuming $this->fcm is an injected controller/service with ->send()
+                    $this->fcm->send($fakeRequest);
+                } catch (\Throwable $e) {
+                    // Log and continue — don't fail the whole request
+                    \Log::warning('FCM send failed for article ' . $article->id . ': ' . $e->getMessage());
+                }
+            }
+
+            DB::commit();
+
             return response()->json([
                 'status' => true,
                 'message' => 'Article created successfully.',
                 'data' => $article->load('tags'),
             ], 201);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
+            if (DB::transactionLevel() > 0)
+                DB::rollBack();
             return response()->json([
                 'status' => false,
                 'message' => 'Validation failed.',
                 'errors' => $e->errors(),
             ], 422);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            if (DB::transactionLevel() > 0)
+                DB::rollBack();
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create article.',

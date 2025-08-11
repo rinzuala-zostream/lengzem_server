@@ -45,8 +45,6 @@ class SubscriptionReminder extends Command
                     'recipient' => $user->token,
                     'title' => $title,
                     'body' => $message,
-                    //'image' => $plan->image ?? '',
-                    //'key' => $plan->id ?? '',
                 ]);
 
                 $this->fcm->send($fakeRequest);

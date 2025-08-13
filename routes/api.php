@@ -10,7 +10,6 @@ use App\Http\Controllers\PreviewController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionPlanController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\ArticleController;
@@ -18,10 +17,8 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\VideoController;
-use Faker\Provider\ar_EG\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // Authenticated user info route
 Route::get('/user', function (Request $request) {
@@ -121,10 +118,10 @@ Route::middleware(['firebase.auth'])->group(function () {
     Route::get('/payments/check', [PaymentController::class, 'checkPaymentStatus']);
 
     //Ads routes
+    Route::get('/ads/types', [AdController::class, 'getTypes']);
     Route::get('/ads', [AdController::class, 'index']);
     Route::get('/ads/{id}', [AdController::class, 'show']);
     Route::post('/ads', [AdController::class, 'store']);
-    Route::get('/ads/types', [AdController::class, 'getTypes']);
 
 });
 

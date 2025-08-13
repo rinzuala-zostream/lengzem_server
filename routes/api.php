@@ -124,6 +124,7 @@ Route::middleware(['firebase.auth'])->group(function () {
     Route::get('/ads', [AdController::class, 'index']);
     Route::get('/ads/{id}', [AdController::class, 'show']);
     Route::post('/ads', [AdController::class, 'store']);
+    Route::get('/ads/types', [AdController::class, 'getTypes']);
 
 });
 

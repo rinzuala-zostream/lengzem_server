@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Ad;
 use App\Models\AdMedia;
+use App\Models\AdType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -12,8 +13,8 @@ class AdController extends Controller
     public function index()
     {
         $ads = Ad::with(['type', 'media'])
-                 ->where('status', 'active')
-                 ->get();
+            ->where('status', 'active')
+            ->get();
 
         return response()->json([
             'status' => true,
@@ -57,7 +58,12 @@ class AdController extends Controller
 
         try {
             $ad = Ad::create($request->only([
-                'title', 'description', 'type_id', 'start_date', 'end_date', 'status'
+                'title',
+                'description',
+                'type_id',
+                'start_date',
+                'end_date',
+                'status'
             ]));
 
             foreach ($request->media ?? [] as $media) {
@@ -78,6 +84,26 @@ class AdController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create ad.',
+                'data' => null,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getTypes()
+    {
+        try {
+            $types = AdType::all();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Ad types fetched successfully.',
+                'data' => $types
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch ad types.',
                 'data' => null,
                 'error' => $e->getMessage()
             ], 500);

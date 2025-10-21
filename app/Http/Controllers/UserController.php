@@ -12,75 +12,21 @@ class UserController extends Controller
 {
 
     // List all users (admin only)
-    public function index(Request $request)
+    public function index()
     {
-        // 🔁 If someone accidentally calls /api/users?_method=PUT&id=123 (or sends PUT to the wrong route),
-        // let index() forward it to update() so your app still works.
-        $spoofed = strtoupper((string) $request->input('_method'));
-        $id = $request->input('id');
-
-        if ($id && ($request->isMethod('put') || $request->isMethod('patch') || $spoofed === 'PUT' || $spoofed === 'PATCH')) {
-            return $this->update($request, $id);
-        }
-
         try {
             $users = User::withCount('articles')->paginate(15);
 
             return response()->json([
-                'status'  => true,
+                'status' => true,
                 'message' => 'Users retrieved successfully.',
-                'data'    => $users,
+                'data' => $users
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'status'  => false,
+                'status' => false,
                 'message' => 'Failed to retrieve users.',
-                'error'   => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    // Update user — fixed
-    public function update(Request $request, $id)
-    {
-        try {
-            $user = User::where('id', $id)->firstOrFail();
-
-            $data = $request->validate([
-                'name'              => ['sometimes', 'nullable', 'string', 'max:100'],
-                'phone'             => ['sometimes', 'nullable', 'string', 'max:15'],
-                'email'             => ['sometimes', 'nullable', 'email', Rule::unique('users', 'email')->ignore($id, 'id')],
-                'role'              => ['sometimes', 'nullable', Rule::in(['admin', 'editor', 'reader'])],
-                'bio'               => ['sometimes', 'nullable', 'string'],
-                'profile_image_url' => ['sometimes', 'nullable', 'url'],
-                'token'             => ['sometimes', 'nullable', 'string'],
-            ]);
-
-            // Use fill + save (instance method). updateOrCreate is a static helper, not for instances.
-            $user->fill($data);
-            $user->save();
-
-            return response()->json([
-                'status'  => true,
-                'message' => 'User updated successfully.',
-                'data'    => $user->fresh(),
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Validation failed.',
-                'error'   => $e->errors(),
-            ], 422);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'User not found.',
-            ], 404);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Failed to update user.',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -155,6 +101,46 @@ class UserController extends Controller
                 'message' => 'Failed to create user.',
                 'error' => $e->getMessage()
             ]);
+        }
+    }
+
+    // Update user
+    public function update(Request $request, $id)
+    {
+        try {
+            $user = User::where('id', $id)->first();
+
+            $data = $request->validate([
+                'name' => 'nullable|string|max:100',
+                'phone' => 'nullable|string|max:15',
+                'email' => 'nullable|email',
+                'role' => ['nullable', Rule::in(['admin', 'editor', 'reader'])],
+                'bio' => 'nullable|string',
+                'profile_image_url' => 'nullable|url',
+                'token' => 'nullable|string',
+            ]);
+
+            $user->updateOrCreate($data);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'User updated successfully.',
+                'data' => $user
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed.',
+                'error' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to update user.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 

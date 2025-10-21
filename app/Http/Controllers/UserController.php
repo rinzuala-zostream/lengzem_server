@@ -108,24 +108,31 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $user = User::where('id', $id)->first();
+            $user = User::findOrFail($id);
 
             $data = $request->validate([
-                'name' => 'nullable|string|max:100',
-                'phone' => 'nullable|string|max:15',
-                'email' => 'nullable|email',
+                'name' => ['nullable', 'string', 'max:100'],
+                'phone' => ['nullable', 'string', 'max:15'],
+                'email' => [
+                    'nullable',
+                    'email',
+                    Rule::unique('users', 'email')->ignore($id) // adjust table/column if needed
+                ],
                 'role' => ['nullable', Rule::in(['admin', 'editor', 'reader'])],
-                'bio' => 'nullable|string',
-                'profile_image_url' => 'nullable|url',
-                'token' => 'nullable|string',
+                'bio' => ['nullable', 'string'],
+                'profile_image_url' => ['nullable', 'url'],
+                'token' => ['nullable', 'string'],
             ]);
 
-            $user->updateOrCreate($data);
+            // If you don’t want to null-out absent fields, remove nulls:
+            // $data = array_filter($data, fn($v) => !is_null($v));
+
+            $user->fill($data)->save(); // or $user->update($data);
 
             return response()->json([
                 'status' => true,
                 'message' => 'User updated successfully.',
-                'data' => $user
+                'data' => $user->fresh(),
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {

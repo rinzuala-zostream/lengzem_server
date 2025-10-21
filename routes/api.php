@@ -31,8 +31,8 @@ Route::middleware(['firebase.auth'])->group(function () {
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::post('/users', [UserController::class, 'store']);
-    Route::put('/users/{id}', [UserController::class, 'update']);
-    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+    Route::put('/users/update/{id}', [UserController::class, 'update']);
+    Route::delete('/users/delete/{id}', [UserController::class, 'destroy']);
 
     //Category routes
     Route::get('/categories', [CategoryController::class, 'index']);

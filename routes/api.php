@@ -25,7 +25,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::middleware(['firebase.auth'])->group(function () {
+//Route::middleware(['firebase.auth'])->group(function () {
     //User routes
     Route::get('/users/editors', [UserController::class, 'getEditors']);
     Route::get('/users', [UserController::class, 'index']);
@@ -123,7 +123,7 @@ Route::middleware(['firebase.auth'])->group(function () {
     Route::get('/ads/{id}', [AdController::class, 'show']);
     Route::post('/ads', [AdController::class, 'store']);
 
-});
+//});
 
 Route::get('/content/{type}/{id}', [PreviewController::class, 'show']);
 

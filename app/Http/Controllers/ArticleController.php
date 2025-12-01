@@ -286,4 +286,124 @@ class ArticleController extends Controller
             ], 500);
         }
     }
+
+    public function search(Request $request)
+    {
+        try {
+            $query = Article::with(['author', 'category', 'tags'])
+                ->withCount('comments');
+
+            // Build message text
+            $searchText = $request->filled('q') ? $request->q : 'all articles';
+
+            /**
+             * 🔍 TEXT SEARCH
+             */
+            if ($request->filled('q')) {
+                $q = $request->q;
+                $query->where(function ($x) use ($q) {
+                    $x->where('title', 'LIKE', "%$q%")
+                        ->orWhere('summary', 'LIKE', "%$q%")
+                        ->orWhere('excerpt', 'LIKE', "%$q%");
+                });
+            }
+
+            /**
+             * 🗂 CATEGORY FILTER
+             */
+            if ($request->filled('category')) {
+                $query->whereHas('category', function ($q) use ($request) {
+                    $q->where('slug', Str::slug($request->category));
+                });
+
+                $searchText .= " | category: {$request->category}";
+            }
+
+            /**
+             * 🏷 TAG FILTER
+             */
+            if ($request->filled('tag')) {
+                $query->whereHas('tags', function ($q) use ($request) {
+                    $q->where('slug', $request->tag);
+                });
+
+                $searchText .= " | tag: {$request->tag}";
+            }
+
+            /**
+             * ⭐ PREMIUM FILTER
+             */
+            if ($request->filled('premium')) {
+                $query->where('isPremium', filter_var($request->premium, FILTER_VALIDATE_BOOLEAN));
+                $searchText .= " | premium: {$request->premium}";
+            }
+
+            /**
+             * 📅 YEAR
+             */
+            if ($request->filled('year')) {
+                $query->whereYear('published_at', intval($request->year));
+                $searchText .= " | year: {$request->year}";
+            }
+
+            /**
+             * 📅 BETWEEN YEARS
+             */
+            if ($request->filled('from') && $request->filled('to')) {
+                $query->whereBetween(
+                    DB::raw('YEAR(published_at)'),
+                    [intval($request->from), intval($request->to)]
+                );
+
+                $searchText .= " | years: {$request->from}-{$request->to}";
+            }
+
+            /**
+             * 📄 STATUS
+             */
+            if ($request->filled('status')) {
+                $query->where('status', strtolower($request->status));
+                $searchText .= " | status: {$request->status}";
+            }
+
+            /**
+             * 🕒 SORTING
+             */
+            $sort = $request->get('sort', 'latest');
+            if ($sort === 'oldest') {
+                $query->orderBy('published_at', 'asc');
+            } else {
+                $query->orderBy('published_at', 'desc');
+            }
+
+            /**
+             * ♾ ALL RESULTS
+             */
+            if ($request->get('mode') === 'all') {
+                return response()->json([
+                    'status' => true,
+                    'message' => "Search for: {$searchText}",
+                    'data' => $query->get(),
+                ]);
+            }
+
+            /**
+             * 📄 PAGINATED RESULTS
+             */
+            $articles = $query->paginate($request->get('per_page', 10));
+
+            return response()->json([
+                'status' => true,
+                'message' => "Search for: {$searchText}",
+                'data' => $articles,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Search failed.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

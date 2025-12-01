@@ -339,23 +339,34 @@ class ArticleController extends Controller
             }
 
             /**
-             * 📅 YEAR
+             * 📅 YEAR / BETWEEN YEARS FIXED LOGIC
              */
-            if ($request->filled('year')) {
-                $query->whereYear('published_at', intval($request->year));
-                $searchText .= " | year: {$request->year}";
+            $hasFrom = $request->filled('from');
+            $hasTo = $request->filled('to');
+
+            // BOTH from and to → BETWEEN filter
+            if ($hasFrom && $hasTo) {
+                $from = intval($request->from);
+                $to = intval($request->to);
+
+                $query->whereBetween(DB::raw('YEAR(published_at)'), [$from, $to]);
+                $searchText .= " | years: {$from}-{$to}";
             }
 
-            /**
-             * 📅 BETWEEN YEARS
-             */
-            if ($request->filled('from') && $request->filled('to')) {
-                $query->whereBetween(
-                    DB::raw('YEAR(published_at)'),
-                    [intval($request->from), intval($request->to)]
-                );
+            // ONLY from → exact year = from
+            else if ($hasFrom && !$hasTo) {
+                $year = intval($request->from);
 
-                $searchText .= " | years: {$request->from}-{$request->to}";
+                $query->whereYear('published_at', $year);
+                $searchText .= " | year: {$year}";
+            }
+
+            // ONLY to → exact year = to
+            else if (!$hasFrom && $hasTo) {
+                $year = intval($request->to);
+
+                $query->whereYear('published_at', $year);
+                $searchText .= " | year: {$year}";
             }
 
             /**

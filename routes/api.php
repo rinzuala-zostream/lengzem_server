@@ -50,12 +50,12 @@ Route::get('/user', function (Request $request) {
     Route::delete('/tags/{id}', [TagController::class, 'destroy']);
 
     //Article routes
+    Route::get('/articles/search', [ArticleController::class, 'search']);
     Route::get('/articles', [ArticleController::class, 'index']);
     Route::get('/articles/{id}', [ArticleController::class, 'show']);
     Route::post('/articles', [ArticleController::class, 'store']);
     Route::put('/articles/{id}', [ArticleController::class, 'update']);
     Route::delete('/articles/{id}', [ArticleController::class, 'destroy']);
-    Route::get('/articles/search', [ArticleController::class, 'search']);
 
     //Article tag routes
     Route::post('/articles/{article}/tags', [ArticleTagController::class, 'attach']);

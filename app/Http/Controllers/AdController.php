@@ -14,14 +14,14 @@ class AdController extends Controller
     {
         try {
             $ads = Ad::with(['type', 'media'])
-            ->where('status', 'active')
-            ->get();
+                ->where('status', 'active')
+                ->get();
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Active ads fetched successfully.',
-            'data' => $ads
-        ]);
+            return response()->json([
+                'status' => true,
+                'message' => 'Active ads fetched successfully.',
+                'data' => $ads
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
@@ -94,6 +94,35 @@ class AdController extends Controller
                 'message' => 'Failed to create ad.',
                 'data' => null,
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $ad = Ad::with('media')->findOrFail($id);
+
+
+            // Delete associated media
+            foreach ($ad->media as $media) {
+                $media->delete();
+            }
+
+            // Delete the ad itself
+            $ad->delete();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Ad deleted successfully.',
+                'data' => null
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to delete ad.',
+                'error' => $e->getMessage(),
+                'data' => null
             ], 500);
         }
     }

@@ -120,7 +120,6 @@ Route::post('/audios/{id}/status', [AudioController::class, 'updateStatus']); //
 Route::get('/payments/check', [PaymentController::class, 'checkPaymentStatus']);
 
 //Ads routes
-Route::get('/ads/types', [AdController::class, 'getTypes']);
 Route::get('/ads', [AdController::class, 'index']);
 Route::get('/ads/{id}', [AdController::class, 'show']);
 Route::post('/ads', [AdController::class, 'store']);

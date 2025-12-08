@@ -89,24 +89,4 @@ class AdController extends Controller
             ], 500);
         }
     }
-
-    public function getTypes()
-    {
-        try {
-            $types = AdType::all();
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Ad types fetched successfully.',
-                'data' => $types
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to fetch ad types.',
-                'data' => null,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
 }

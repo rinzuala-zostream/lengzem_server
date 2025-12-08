@@ -10,13 +10,22 @@ class AdTypeController extends Controller
     // ✅ Get all ad types
     public function index()
     {
-        $types = AdType::all();
+        try {
+            $types = AdType::all();
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Ad types fetched successfully.',
-            'data' => $types
-        ]);
+            return response()->json([
+                'status' => true,
+                'message' => 'Ad types fetched successfully.',
+                'data' => $types
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch ad types.',
+                'data' => null,
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // ✅ Get one ad type by ID

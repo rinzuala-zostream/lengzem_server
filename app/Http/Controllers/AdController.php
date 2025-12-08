@@ -12,7 +12,8 @@ class AdController extends Controller
 {
     public function index()
     {
-        $ads = Ad::with(['type', 'media'])
+        try {
+            $ads = Ad::with(['type', 'media'])
             ->where('status', 'active')
             ->get();
 
@@ -21,6 +22,13 @@ class AdController extends Controller
             'message' => 'Active ads fetched successfully.',
             'data' => $ads
         ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Ad not found.',
+                'data' => null
+            ], 404);
+        }
     }
 
     public function show($id)

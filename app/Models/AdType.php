@@ -8,6 +8,7 @@ class AdType extends Model
 {
     protected $table = 'ad_types';
     protected $fillable = ['name'];
+    public $timestamps = false;
 
     public function ads()
     {

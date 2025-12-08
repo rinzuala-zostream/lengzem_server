@@ -123,7 +123,7 @@ Route::get('/payments/check', [PaymentController::class, 'checkPaymentStatus']);
 Route::get('/ads', [AdController::class, 'index']);
 Route::get('/ads/{id}', [AdController::class, 'show']);
 Route::post('/ads', [AdController::class, 'store']);
-Route::delete('/ad/{id}', [AdController::class, 'destroy']);
+Route::delete('/ad-delete/{id}', [AdController::class, 'destroy']);
 
 Route::get('/ad-types', [AdTypeController::class, 'index']);
 Route::get('/ad-types/{id}', [AdTypeController::class, 'show']);

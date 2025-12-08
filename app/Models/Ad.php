@@ -13,6 +13,8 @@ class Ad extends Model
         'title', 'description', 'type_id', 'start_date', 'end_date', 'status'
     ];
 
+    public $timestamps = false;
+
     public function type()
     {
         return $this->belongsTo(AdType::class, 'type_id');

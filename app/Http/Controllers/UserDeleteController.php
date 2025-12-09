@@ -44,7 +44,7 @@ class UserDeleteController extends Controller
             $this->auth->deleteUser($uid);
 
             // 🔹 Delete user from local database if exists
-            User::where('firebase_uid', $uid)->delete();
+            User::where('id', $uid)->delete();
 
             return response()->json([
                 'status' => true,

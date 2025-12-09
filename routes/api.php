@@ -17,6 +17,7 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\MediaController;
+use App\Http\Controllers\UserDeleteController;
 use App\Http\Controllers\VideoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -134,4 +135,6 @@ Route::delete('/ad-types/{id}', [AdTypeController::class, 'destroy']);
 //});
 
 Route::get('/content/{type}/{id}', [PreviewController::class, 'show']);
+
+Route::delete('/user/delete', [UserDeleteController::class, 'deleteAccount']);
 

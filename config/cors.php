@@ -6,7 +6,10 @@ return [
 
     'allowed_methods' => ['*'],         // allow all HTTP methods
 
-    'allowed_origins' => ['https://app.lengzem.in'],  // allow your frontend origin
+    'allowed_origins' => [
+        'https://app.lengzem.in',
+        'https://lengzem.in'
+    ],  // allow your frontend origin
 
     'allowed_origins_patterns' => [],
 

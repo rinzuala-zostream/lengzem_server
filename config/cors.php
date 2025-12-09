@@ -2,23 +2,19 @@
 
 return [
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'content/*'],  // the routes you want CORS enabled for
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['*'],         // allow all HTTP methods
 
-    'allowed_origins' => [
-        'https://app.lengzem.in',
-    ],
+    'allowed_origins' => ['https://app.lengzem.in'],  // allow your frontend origin
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => ['*'],         // allow all headers
 
     'exposed_headers' => [],
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
-
+    'supports_credentials' => false,    // true if you use cookies/auth headers
 ];
-

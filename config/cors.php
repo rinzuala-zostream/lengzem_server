@@ -9,7 +9,7 @@ return [
     'allowed_origins' => [
         'https://app.lengzem.in',
         'https://lengzem.in',
-        'http://127.0.0.1:8000',
+        'http://127.0.0.1:5500',
     ],
 
     'allowed_origins_patterns' => [],

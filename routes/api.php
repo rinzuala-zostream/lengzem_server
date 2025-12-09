@@ -136,5 +136,5 @@ Route::delete('/ad-types/{id}', [AdTypeController::class, 'destroy']);
 
 Route::get('/content/{type}/{id}', [PreviewController::class, 'show']);
 
-Route::delete('/user/delete', [UserDeleteController::class, 'deleteAccount']);
+Route::delete('/account/delete', [UserDeleteController::class, 'deleteAccount']);
 

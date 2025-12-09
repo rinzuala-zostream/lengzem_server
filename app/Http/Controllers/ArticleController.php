@@ -303,8 +303,7 @@ class ArticleController extends Controller
                 $q = $request->q;
                 $query->where(function ($x) use ($q) {
                     $x->where('title', 'LIKE', "%$q%")
-                        ->orWhere('summary', 'LIKE', "%$q%")
-                        ->orWhere('excerpt', 'LIKE', "%$q%");
+                        ->orWhere('summary', 'LIKE', "%$q%");
                 });
             }
 

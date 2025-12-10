@@ -58,7 +58,9 @@ class PaymentController extends Controller
                 $paymentCompleted = isset($paymentResponse['code']) && $paymentResponse['code'] === 'PAYMENT_SUCCESS' ||
                     isset($paymentResponse['data']['state']) && $paymentResponse['data']['state'] === 'COMPLETED';
 
-                if ($paymentSuccess && $paymentCompleted) {
+                $paymentAmount = ((int)$paymentResponse['data']['payments']['amount'] === (int)($sub->amount * 100));
+
+                if ($paymentSuccess && $paymentCompleted && $paymentAmount) {
                     // Set as active
                     $sub->status = 'active';
                     $sub->save();

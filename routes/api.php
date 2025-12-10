@@ -8,6 +8,7 @@ use App\Http\Controllers\CheckPendingPayment;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PreviewController;
+use App\Http\Controllers\RazorpayController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionPlanController;
 use App\Http\Controllers\UserController;
@@ -98,7 +99,6 @@ Route::put('/subscriptions/{id}', [SubscriptionController::class, 'update']);
 Route::delete('/subscriptions/{id}', [SubscriptionController::class, 'destroy']);
 Route::get('/subscriptions/{userId}/verify', [CheckPendingPayment::class, 'processUserPayments']);
 
-
 Route::get('/home', [HomeController::class, 'index']);
 
 // 📽️ Video Routes
@@ -119,6 +119,8 @@ Route::post('/audios/{id}/status', [AudioController::class, 'updateStatus']); //
 
 //Payment routes
 Route::get('/payments/check', [PaymentController::class, 'checkPaymentStatus']);
+Route::get('/payments/razorpay/orders/{orderId}/status', [RazorpayController::class, 'checkPaymentStatus']);
+Route::post('/payments/razorpay/orders', [RazorpayController::class, 'createOrder']);
 
 //Ads routes
 Route::get('/ads', [AdController::class, 'index']);

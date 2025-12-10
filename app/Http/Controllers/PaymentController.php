@@ -13,9 +13,12 @@ class PaymentController extends Controller
 
     protected $subscription;
 
-    public function __construct(SubscriptionController $subscription)
+    public RazorpayController $razorpayController;
+
+    public function __construct(SubscriptionController $subscription, RazorpayController $razorpayController)
     {
         $this->subscription = $subscription;
+        $this->razorpayController = $razorpayController;
     }
 
     public function checkPaymentStatus(Request $request)
@@ -45,10 +48,17 @@ class PaymentController extends Controller
             foreach ($pendingSubs as $sub) {
                 $transactionId = $sub->payment_id;
 
-                $response = $this->checkPhonePePaymentStatus($transactionId);
-                $state = $response['data']['state'] ?? null;
+                $orderId = $transactionId;
+                $h = strtolower(trim((string) $request->header('X-RZ-Env', 'production')));
+                $razorpayReq = new Request(['X-RZ-Env' => $h]);
+                $razorResponse = $this->razorpayController->checkPaymentStatus($razorpayReq, $orderId);
+                $paymentResponse = json_decode($razorResponse->getContent(), true);
 
-                if ($response['success'] && $state === 'COMPLETED') {
+                $paymentSuccess = isset($paymentResponse['success']) && $paymentResponse['success'] === true;
+                $paymentCompleted = isset($paymentResponse['code']) && $paymentResponse['code'] === 'PAYMENT_SUCCESS' ||
+                    isset($paymentResponse['data']['state']) && $paymentResponse['data']['state'] === 'COMPLETED';
+
+                if ($paymentSuccess && $paymentCompleted) {
                     // Set as active
                     $sub->status = 'active';
                     $sub->save();
@@ -76,20 +86,5 @@ class PaymentController extends Controller
                 'message' => 'Error checking payment status: ' . $e->getMessage()
             ]);
         }
-    }
-
-    private function checkPhonePePaymentStatus($transactionId)
-    {
-        $path = "/pg/v1/status/{$this->merchantId}/{$transactionId}";
-        $checksum = hash('sha256', $path . $this->saltKey) . "###1";
-        $url = "https://api.phonepe.com/apis/hermes{$path}";
-
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            'X-VERIFY' => $checksum,
-            'X-MERCHANT-ID' => $this->merchantId
-        ])->get($url);
-
-        return $response->json();
     }
 }

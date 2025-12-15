@@ -55,37 +55,39 @@ class PaymentController extends Controller
                 $paymentResponse = json_decode($razorResponse->getContent(), true);
 
                 $paymentSuccess = isset($paymentResponse['success']) && $paymentResponse['success'] === true;
-                $paymentCompleted = isset($paymentResponse['code']) && $paymentResponse['code'] === 'PAYMENT_SUCCESS' ||
-                    isset($paymentResponse['data']['state']) && $paymentResponse['data']['state'] === 'COMPLETED';
+                $paymentCompleted = (
+                    (isset($paymentResponse['code']) && $paymentResponse['code'] === 'PAYMENT_SUCCESS') ||
+                    (isset($paymentResponse['data']['state']) && $paymentResponse['data']['state'] === 'COMPLETED')
+                );
 
-                // Extract amount safely
+                // Handle both array/object payment structures
                 $paymentAmount = false;
                 if (isset($paymentResponse['data']['payments'])) {
                     if (is_array($paymentResponse['data']['payments'])) {
-                        // Case 1: payments is an array (e.g. [0 => ['amount' => 9900]])
                         $firstPayment = $paymentResponse['data']['payments'][0] ?? null;
                         if ($firstPayment && isset($firstPayment['amount'])) {
                             $paymentAmount = ((int) $firstPayment['amount'] === (int) ($sub->amount * 100));
                         }
                     } elseif (isset($paymentResponse['data']['payments']['amount'])) {
-                        // Case 2: payments is an object-like associative array
                         $paymentAmount = ((int) $paymentResponse['data']['payments']['amount'] === (int) ($sub->amount * 100));
                     }
                 }
 
+                // ✅ Always define state
+                $state = $paymentResponse['data']['state'] ??
+                    ($paymentResponse['data']['payments'][0]['status'] ?? 'UNKNOWN');
+
                 if ($paymentSuccess && $paymentCompleted && $paymentAmount) {
-                    // Set as active
                     $sub->status = 'active';
                     $sub->save();
                 } else {
-                    // Delete the subscription if payment not completed
                     $sub->delete();
                 }
 
                 $results[] = [
                     'subscription_id' => $sub->id,
                     'transaction_id' => $transactionId,
-                    'payment_status' => $state ?? 'UNKNOWN',
+                    'payment_status' => $state,
                     'action' => ($state === 'COMPLETED') ? 'activated' : 'deleted',
                 ];
             }

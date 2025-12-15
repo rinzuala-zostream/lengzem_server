@@ -58,7 +58,20 @@ class PaymentController extends Controller
                 $paymentCompleted = isset($paymentResponse['code']) && $paymentResponse['code'] === 'PAYMENT_SUCCESS' ||
                     isset($paymentResponse['data']['state']) && $paymentResponse['data']['state'] === 'COMPLETED';
 
-                $paymentAmount = ((int)$paymentResponse['data']['payments']['amount'] === (int)($sub->amount * 100));
+                // Extract amount safely
+                $paymentAmount = false;
+                if (isset($paymentResponse['data']['payments'])) {
+                    if (is_array($paymentResponse['data']['payments'])) {
+                        // Case 1: payments is an array (e.g. [0 => ['amount' => 9900]])
+                        $firstPayment = $paymentResponse['data']['payments'][0] ?? null;
+                        if ($firstPayment && isset($firstPayment['amount'])) {
+                            $paymentAmount = ((int) $firstPayment['amount'] === (int) ($sub->amount * 100));
+                        }
+                    } elseif (isset($paymentResponse['data']['payments']['amount'])) {
+                        // Case 2: payments is an object-like associative array
+                        $paymentAmount = ((int) $paymentResponse['data']['payments']['amount'] === (int) ($sub->amount * 100));
+                    }
+                }
 
                 if ($paymentSuccess && $paymentCompleted && $paymentAmount) {
                     // Set as active

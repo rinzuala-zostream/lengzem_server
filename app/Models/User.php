@@ -28,9 +28,9 @@ class User extends Authenticatable
     ];
 
     public function articles()
-    {
-        return $this->hasMany(Article::class, 'user.id', 'id'); // target: user.id
-    }
+{
+    return $this->hasMany(Article::class, 'author_id', 'id');
+}
 
     public function toArray()
     {

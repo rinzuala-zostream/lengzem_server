@@ -152,26 +152,29 @@ class UserController extends Controller
     }
 
     // Get all users with role 'editor'
-    public function getEditors()
-    {
-        try {
-            $editors = User::withCount('articles')
-                ->where('role', 'editor')
-                ->paginate(100);
+    // Get all users with role 'editor' or 'admin'
+public function getEditors()
+{
+    try {
+        $editors = User::withCount('articles')
+            ->whereIn('role', ['editor', 'admin'])
+            ->orderBy('role') // Optional: order by role first
+            ->orderBy('created_at', 'desc') // Optional: order by creation date
+            ->paginate(100);
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Editors retrieved successfully.',
-                'data' => $editors
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to retrieve editors.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status' => true,
+            'message' => 'Editors and Admins retrieved successfully.',
+            'data' => $editors
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Failed to retrieve editors and admins.',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     // Delete user
     public function destroy($id)

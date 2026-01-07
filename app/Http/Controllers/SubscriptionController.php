@@ -11,22 +11,34 @@ use Illuminate\Validation\ValidationException;
 class SubscriptionController extends Controller
 {
     // Get all subscriptions with related plan and user
-    public function index(Request $request)
-    {
-        $userId = $request->query('user_id'); // user_id param
-
-        $query = Subscription::with('plan', 'user');
+public function index(Request $request)
+{
+    try {
+        $userId = $request->query('user_id');
+        $perPage = $request->query('per_page', 15);
+        
+        $query = Subscription::with(['plan', 'user']);
 
         if ($userId) {
             $query->where('user_id', $userId);
         }
 
-        $subscriptions = $query->get();
+        // Optional: Add ordering
+        $query->orderBy('created_at', 'desc');
+
+        $subscriptions = $query->paginate($perPage);
 
         if ($subscriptions->isEmpty()) {
             return response()->json([
-                'status' => false,
+                'status' => true,
                 'message' => 'No subscriptions found',
+                'data' => [
+                    'data' => [],
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => $perPage,
+                    'total' => 0
+                ]
             ]);
         }
 
@@ -35,7 +47,15 @@ class SubscriptionController extends Controller
             'message' => 'Subscriptions retrieved successfully.',
             'data' => $subscriptions,
         ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Failed to retrieve subscriptions.',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     // Store a new subscription
     public function store(Request $request)

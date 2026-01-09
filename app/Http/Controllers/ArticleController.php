@@ -115,7 +115,7 @@ class ArticleController extends Controller
                 'summary' => 'nullable|string',
                 'content' => 'required|string',
                 'slug' => 'nullable|string|max:255|unique:articles,slug',
-                'author_id' => 'required|exists:user,id',
+                'author_id' => 'nullable|exists:user,id',
                 'category_id' => 'nullable|exists:categories,id',
                 'status' => 'required|in:Draft,Published,Scheduled,draft,published,scheduled',
                 'scheduled_publish_time' => 'nullable|date',

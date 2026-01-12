@@ -417,37 +417,37 @@ class ArticleController extends Controller
         }
     }
 
-    public function adminShow($id)
-{
-    try {
-        $article = Article::with([
-                'author',
-                'category',
-                'tags',
-                'media',
-                'comments',
-            ])
-            ->withCount('comments')
-            ->findOrFail($id);
+    public function adminShow(Request $request, $id)
+    {
+        try {
+            $article = Article::with([
+                    'author',
+                    'category',
+                    'tags',
+                    'media',
+                    'comments',
+                ])
+                ->withCount('comments')
+                ->findOrFail($id);
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Article retrieved successfully (admin).',
-            'data' => $article,
-        ]);
+            return response()->json([
+                'status' => true,
+                'message' => 'Article retrieved successfully (admin).',
+                'data' => $article,
+            ]);
 
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Article not found.',
-        ], 404);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Article not found.',
+            ], 404);
 
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Failed to retrieve article.',
-            'error' => $e->getMessage(),
-        ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve article.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
-}
 }

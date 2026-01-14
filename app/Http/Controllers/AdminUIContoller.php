@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Interaction;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\Subscription;
 use App\Models\Comment;
@@ -12,32 +12,45 @@ use App\Models\Video;
 use App\Models\AudioModel;
 use App\Models\Article;
 use App\Models\Category;
-use App\Http\Resources\ArticleResource;
-use App\Http\Resources\CategoryResource;
 
 class AdminUIController extends Controller
 {
-    public function index()
+    /**
+     * Admin dashboard statistics
+     */
+    public function index(): JsonResponse
     {
-        $users = User::count();
-        $subscriptions = Subscription::count();
-        $comments = Comment::count();
-        $videos = Video::count();
-        $audios = AudioModel::count();
-        $articles = Article::count();
-        $categories = Category::count();
+        try {
+            // Cache for 5 minutes
+            $data = Cache::remember('admin_dashboard_stats', now()->addMinutes(5), function () {
+                return [
+                    'users'         => User::count(),
+                    'subscriptions' => Subscription::count(),
+                    'comments'      => Comment::count(),
+                    'videos'        => Video::count(),
+                    'audios'        => AudioModel::count(),
+                    'articles'      => Article::count(),
+                    'categories'    => Category::count(),
+                ];
+            });
 
-        return response()->json([
-            'status' => true,
-            'data' => [
-                'users' => $users,
-                'subscriptions' => $subscriptions,
-                'comments' => $comments,
-                'videos' => $videos,
-                'audios' => $audios,
-                'articles' => $articles,
-                'categories' => $categories
-            ]
-        ]);
+            return response()->json([
+                'status' => true,
+                'data'   => $data,
+            ], 200);
+
+        } catch (\Throwable $e) {
+            // Log the actual error for debugging
+            Log::error('Admin dashboard stats failed', [
+                'error' => $e->getMessage(),
+                'file'  => $e->getFile(),
+                'line'  => $e->getLine(),
+            ]);
+
+            return response()->json([
+                'status'  => false,
+                'message' => 'Failed to load dashboard statistics.',
+            ], 500);
+        }
     }
 }

@@ -119,9 +119,9 @@ class HomeController extends Controller
 
         // Final Response
         $response = [
+            'Newly Published' => ArticleResource::collection($newlyPublished),
             'Trending Now' => ArticleResource::collection($trending),
             'News nawi leh tawi' => ArticleResource::collection($newsNawi),
-            'Newly Published' => ArticleResource::collection($newlyPublished),
             'Recommended for You' => ArticleResource::collection($recommended),
             'Most Liked' => ArticleResource::collection($mostLiked),
             'From Authors You Read' => ArticleResource::collection($fromAuthors),

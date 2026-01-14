@@ -71,7 +71,7 @@ class AdminUIController extends Controller
 
             return response()->json([
                 'status'  => false,
-                'message' => 'Failed to load dashboard statistics.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

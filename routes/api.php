@@ -21,6 +21,7 @@ use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\UserDeleteController;
 use App\Http\Controllers\VideoController;
+use App\Http\Controllers\AdminUIController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -143,4 +144,7 @@ Route::get('/content/{type}/{id}', [PreviewController::class, 'show']);
 Route::delete('/account/delete', [UserDeleteController::class, 'deleteAccount']);
 
 Route::post('/fcm/send', [FCMNotificationController::class, 'send']);
+
+//Admin UI Data Route
+Route::get('/admin/dashboard', [AdminUIController::class, 'index']);
 

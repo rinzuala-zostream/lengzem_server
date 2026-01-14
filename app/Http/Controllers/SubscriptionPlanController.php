@@ -126,6 +126,7 @@ class SubscriptionPlanController extends Controller
             // Validate the request
             $validated = $request->validate([
                 'name' => 'sometimes|required|string|max:255',
+                'description' => 'sometimes|nullable|string',
                 'price' => 'sometimes|required|numeric|min:0',
                 'interval_value' => 'sometimes|required|integer|min:1',
                 'interval_unit' => 'sometimes|required|in:day,week,month,year',

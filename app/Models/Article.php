@@ -11,6 +11,7 @@ class Article extends Model
 
     protected $fillable = [
         'author_id',
+        'contributor',
         'category_id',
         'title',
         'slug',
@@ -28,19 +29,25 @@ class Article extends Model
     protected $casts = [
         'isCommentable' => 'boolean',
         'isPremium' => 'boolean',
-
+        'contributor' => 'integer',
     ];
 
     protected $dates = ['published_at'];
 
+    /* =======================
+     | Relationships
+     ======================= */
+
+    // Author of the article
     public function author()
     {
-        return $this->belongsTo(User::class, 'author_id', 'id');
+        return $this->belongsTo(User::class, 'author_id');
     }
 
-    public function user()
+    // Contributor of the article (nullable FK)
+    public function contributorUser()
     {
-        return $this->belongsTo(User::class, 'author_id', 'id');
+        return $this->belongsTo(User::class, 'contributor');
     }
 
     // Article belongs to a Category
@@ -73,16 +80,23 @@ class Article extends Model
         return $this->hasMany(Interaction::class);
     }
 
+    /* =======================
+     | Scopes
+     ======================= */
+
     public function scopePublished($query)
     {
         return $query->where('status', 'published');
     }
 
+    /* =======================
+     | Serialization
+     ======================= */
+
     public function toArray()
     {
         $array = parent::toArray();
 
-        // Format the fields
         $array['published_at'] = $this->published_at
             ? Carbon::parse($this->published_at)->format('F j, Y')
             : null;
@@ -93,5 +107,4 @@ class Article extends Model
 
         return $array;
     }
-
 }

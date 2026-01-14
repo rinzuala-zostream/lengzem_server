@@ -210,7 +210,7 @@ class AdminUIController extends Controller
 
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to load user statistics.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

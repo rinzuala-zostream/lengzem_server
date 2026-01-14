@@ -5,6 +5,7 @@ use App\Http\Controllers\AdTypeController;
 use App\Http\Controllers\ArticleTagController;
 use App\Http\Controllers\AudioController;
 use App\Http\Controllers\CheckPendingPayment;
+use App\Http\Controllers\FCMNotificationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PreviewController;
@@ -140,4 +141,6 @@ Route::delete('/ad-types/{id}', [AdTypeController::class, 'destroy']);
 Route::get('/content/{type}/{id}', [PreviewController::class, 'show']);
 
 Route::delete('/account/delete', [UserDeleteController::class, 'deleteAccount']);
+
+Route::post('/fcm/send', [FCMNotificationController::class, 'send']);
 

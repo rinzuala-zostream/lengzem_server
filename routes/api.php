@@ -33,6 +33,10 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 //Route::middleware(['firebase.auth'])->group(function () {
+
+Route::post('/article/add-time', [ArticleReadTimeController::class, 'store']);
+Route::get('/article/{userId}/{articleId}/total-time', [ArticleReadTimeController::class, 'getTotal']);
+
 //User routes
 Route::get('/users/editors', [UserController::class, 'getEditors']);
 Route::get('/users', [UserController::class, 'index']);
@@ -160,5 +164,3 @@ Route::prefix('banners')->group(function () {
     Route::delete('/{id}', [BannerController::class, 'destroy']);
 });
 
-Route::post('/article/add-time', [ArticleReadTimeController::class, 'store']);
-Route::get('/article/{userId}/{articleId}/total-time', [ArticleReadTimeController::class, 'getTotal']);

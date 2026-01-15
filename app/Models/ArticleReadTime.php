@@ -10,12 +10,11 @@ class ArticleReadTime extends Model
     use HasFactory;
 
     protected $table = 'article_read_times';
-     public $timestamps = false;
 
     protected $fillable = [
         'user_id',
         'article_id',
-
+        'session_id',
         'start_time',
         'end_time',
         'duration_seconds',

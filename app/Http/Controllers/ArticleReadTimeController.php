@@ -15,7 +15,7 @@ class ArticleReadTimeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'user_id' => 'required|integer',
+            'user_id' => 'required|string',
             'article_id' => 'required|integer',
             'duration_seconds' => 'required|integer|min:1',
             'device_type' => 'nullable|in:mobile,desktop,tablet',

@@ -19,11 +19,12 @@ class Subscription extends Model
         'end_date',
         'status',
         'amount',
+        'redeem_id'
     ];
 
     protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
     ];
 
     public function user()
@@ -34,6 +35,11 @@ class Subscription extends Model
     public function plan()
     {
         return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
+    }
+
+    public function redeemCode()
+    {
+        return $this->belongsTo(\App\Models\RedeemCode::class, 'redeem_id');
     }
 
     public function toArray()

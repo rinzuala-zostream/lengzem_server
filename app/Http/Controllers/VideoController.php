@@ -75,49 +75,59 @@ class VideoController extends Controller
     }
 
     // Create new video
-    public function store(Request $request)
-    {
-        try {
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'language' => 'nullable|string|max:50',
-                'thumbnail_url' => 'nullable|url',
-                'duration' => 'nullable|string', // ensure it's a string since we store HH:MM:SS
-                'release_date' => 'nullable|date',
-                'status' => 'required|in:draft,scheduled,published',
-                'author_id' => 'required|exists:user,id',
-                'is_premium' => 'nullable|boolean',
-                'url' => 'required|url',
-            ]);
-
-            // If duration is not provided, try extracting from MPD manifest
-            if (empty($validated['duration'])) {
-                $validated['duration'] = $this->extractDurationFromMPD($validated['url']) ?? '00:00:00';
+   public function store(Request $request)
+{
+    try {
+        // Normalize URLs (encode spaces)
+        foreach (['url', 'thumbnail_url'] as $field) {
+            if ($request->filled($field)) {
+                $request->merge([
+                    $field => str_replace(' ', '%20', trim($request->$field))
+                ]);
             }
-
-            $video = videoModel::create($validated);
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Video created successfully.',
-                'data' => $video
-            ], 201);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation failed.',
-                'error' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to create video.',
-                'error' => $e->getMessage()
-            ], 500);
         }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'language' => 'nullable|string|max:50',
+            'thumbnail_url' => 'nullable|url',
+            'duration' => 'nullable|string', // HH:MM:SS
+            'release_date' => 'nullable|date',
+            'status' => 'required|in:draft,scheduled,published',
+            'author_id' => 'required|exists:user,id',
+            'is_premium' => 'nullable|boolean',
+            'url' => 'required|url',
+        ]);
+
+        // Auto-extract duration if missing
+        if (empty($validated['duration'])) {
+            $validated['duration'] =
+                $this->extractDurationFromMPD($validated['url']) ?? '00:00:00';
+        }
+
+        $video = videoModel::create($validated);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Video created successfully.',
+            'data' => $video
+        ], 201);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Validation failed.',
+            'error' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Failed to create video.',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     private function extractDurationFromMPD($mpdUrl)
     {

@@ -24,9 +24,12 @@ class SubscriptionPlanController extends Controller
 
         $activePlanId = null;
         $currentPlan = null;
+        $redeemCode = null;
 
         if ($userId) {
-            $activeSubscription = Subscription::where('user_id', $userId)
+            // ✅ Load active subscription with redeemCode relation
+            $activeSubscription = Subscription::with('redeemCode')
+                ->where('user_id', $userId)
                 ->where('status', 'active')
                 ->latest('id')
                 ->first();
@@ -34,15 +37,23 @@ class SubscriptionPlanController extends Controller
             if ($activeSubscription) {
                 $activePlanId = $activeSubscription->subscription_plan_id;
                 $currentPlan = $plans->firstWhere('id', $activePlanId);
+
+                // ✅ Get redeem code from active subscription (if any)
+                $redeemCode = $activeSubscription->redeemCode;
             }
         }
 
         // Mark the current plan and filter others
-        $plans = $plans->map(function ($plan) use ($currentPlan) {
+        $plans = $plans->map(function ($plan) use ($currentPlan, $redeemCode) {
             $plan->current_plan = false;
 
             if ($currentPlan && $plan->id === $currentPlan->id) {
                 $plan->current_plan = true;
+
+                // ✅ Only add redeem code if this is the current plan
+                if ($redeemCode) {
+                    $plan->redeem_code = $redeemCode;
+                }
             }
 
             return $plan;
@@ -52,7 +63,7 @@ class SubscriptionPlanController extends Controller
         if ($currentPlan) {
             $plans = $plans->filter(function ($plan) use ($currentPlan) {
                 return $plan->price > $currentPlan->price || $plan->current_plan;
-            })->values(); // reindex collection
+            })->values();
         }
 
         return response()->json([

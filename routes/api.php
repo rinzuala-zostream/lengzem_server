@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdController;
 use App\Http\Controllers\AdTypeController;
+use App\Http\Controllers\ArticleReadTimeController;
 use App\Http\Controllers\ArticleTagController;
 use App\Http\Controllers\AudioController;
 use App\Http\Controllers\CheckPendingPayment;
@@ -159,4 +160,5 @@ Route::prefix('banners')->group(function () {
     Route::delete('/{id}', [BannerController::class, 'destroy']);
 });
 
-
+Route::post('/article/add-time', [ArticleReadTimeController::class, 'add']);
+Route::get('/article/{userId}/{articleId}/total-time', [ArticleReadTimeController::class, 'getTotal']);

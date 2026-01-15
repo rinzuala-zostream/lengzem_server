@@ -26,7 +26,7 @@ class ArticleReadTimeController extends Controller
         $readTime = ArticleReadTime::create([
             'user_id' => $request->user_id,
             'article_id' => $request->article_id,
-            'session_id' => Str::uuid()->toString(), // generate a unique session id
+        
             'start_time' => $now,
             'end_time' => $now, // same as start_time, since we only log duration
             'duration_seconds' => $request->duration_seconds,

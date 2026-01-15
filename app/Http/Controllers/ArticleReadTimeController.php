@@ -12,7 +12,7 @@ class ArticleReadTimeController extends Controller
     /**
      * Add reading time for a user and article
      */
-    public function add(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             'user_id' => 'required|integer',

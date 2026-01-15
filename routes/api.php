@@ -160,5 +160,5 @@ Route::prefix('banners')->group(function () {
     Route::delete('/{id}', [BannerController::class, 'destroy']);
 });
 
-Route::post('/article/add-time', [ArticleReadTimeController::class, 'add']);
+Route::post('/article/add-time', [ArticleReadTimeController::class, 'store']);
 Route::get('/article/{userId}/{articleId}/total-time', [ArticleReadTimeController::class, 'getTotal']);

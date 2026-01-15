@@ -88,11 +88,6 @@ class BannerController extends Controller
                 'end_at' => 'nullable|date|after_or_equal:start_at',
             ]);
 
-            // Normalize bannerable_type
-            if (!str_contains($data['bannerable_type'], '\\')) {
-                $data['bannerable_type'] = 'App\\Models\\' . ucfirst($data['bannerable_type']);
-            }
-
             $banner = Banner::create($data);
 
             return response()->json([
@@ -128,10 +123,6 @@ class BannerController extends Controller
                 'start_at' => 'nullable|date',
                 'end_at' => 'nullable|date|after_or_equal:start_at',
             ]);
-
-            if (isset($data['bannerable_type']) && !str_contains($data['bannerable_type'], '\\')) {
-                $data['bannerable_type'] = 'App\\Models\\' . ucfirst($data['bannerable_type']);
-            }
 
             $banner->update($data);
 

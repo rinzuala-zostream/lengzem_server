@@ -120,6 +120,8 @@ class UserController extends Controller
                 ],
                 'role' => ['nullable', Rule::in(['admin', 'editor', 'reader'])],
                 'bio' => ['nullable', 'string'],
+                'address' => ['nullable', 'string', 'max:50'],
+                'dob' => ['nullable', 'date'], 
                 'profile_image_url' => ['nullable', 'url'],
                 'token' => ['nullable', 'string'],
             ]);

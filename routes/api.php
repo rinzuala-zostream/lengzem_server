@@ -22,6 +22,7 @@ use App\Http\Controllers\MediaController;
 use App\Http\Controllers\UserDeleteController;
 use App\Http\Controllers\VideoController;
 use App\Http\Controllers\AdminUIController;
+use App\Http\Controllers\BannerController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -147,4 +148,15 @@ Route::post('/fcm/send', [FCMNotificationController::class, 'send']);
 
 //Admin UI Data Route
 Route::get('/admin/dashboard', [AdminUIController::class, 'index']);
+
+// Banner Model Snippet from app/Models/Banner.php
+Route::prefix('banners')->group(function () {
+    Route::get('/', [BannerController::class, 'index']);
+    Route::get('/search', [BannerController::class, 'search']);
+    Route::get('/{id}', [BannerController::class, 'show']);
+    Route::post('/', [BannerController::class, 'store']);
+    Route::put('/{id}', [BannerController::class, 'update']);
+    Route::delete('/{id}', [BannerController::class, 'destroy']);
+});
+
 

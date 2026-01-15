@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RedeemCode;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use Illuminate\Http\Request;
@@ -25,12 +24,9 @@ class SubscriptionPlanController extends Controller
 
         $activePlanId = null;
         $currentPlan = null;
-        $redeemCode = null;
 
         if ($userId) {
-            // ✅ Load active subscription with redeem code relation
-            $activeSubscription = Subscription::with('redeem_id')
-                ->where('user_id', $userId)
+            $activeSubscription = Subscription::where('user_id', $userId)
                 ->where('status', 'active')
                 ->latest('id')
                 ->first();
@@ -38,34 +34,25 @@ class SubscriptionPlanController extends Controller
             if ($activeSubscription) {
                 $activePlanId = $activeSubscription->subscription_plan_id;
                 $currentPlan = $plans->firstWhere('id', $activePlanId);
-
-                // ✅ Get the linked redeem code (if exists)
-                $redeemCode = $activeSubscription->redeemCode;
             }
         }
 
-        // Mark the current plan
-        $plans = $plans->map(function ($plan) use ($currentPlan, $redeemCode) {
+        // Mark the current plan and filter others
+        $plans = $plans->map(function ($plan) use ($currentPlan) {
             $plan->current_plan = false;
 
             if ($currentPlan && $plan->id === $currentPlan->id) {
                 $plan->current_plan = true;
-
-                if ($redeemCode && !$redeemCode->isExpired()) {
-                    $plan->redeem_code = $redeemCode;
-                } else {
-                    $plan->redeem_code = null;
-                }
             }
 
             return $plan;
         });
 
-        // Filter upgradeable plans (price > current)
+        // Filter to only show upgradeable plans (price > current)
         if ($currentPlan) {
             $plans = $plans->filter(function ($plan) use ($currentPlan) {
                 return $plan->price > $currentPlan->price || $plan->current_plan;
-            })->values();
+            })->values(); // reindex collection
         }
 
         return response()->json([

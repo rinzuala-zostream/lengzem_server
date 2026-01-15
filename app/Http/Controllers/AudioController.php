@@ -33,7 +33,7 @@ class AudioController extends Controller
     public function show($id)
     {
         try {
-            $audio = AudioModel::published()->findOrFail($id);
+            $audio = AudioModel::with('author')->findOrFail($id);
             return response()->json([
                 'status' => true,
                 'message' => 'Audio retrieved successfully.',

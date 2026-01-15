@@ -52,18 +52,29 @@ class AdController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:100',
-            'description' => 'nullable|string',
-            'type_id' => 'required|exists:ad_types,id',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'status' => 'in:active,inactive,expired',
-            'media' => 'array',
-            'media.*.url' => 'required|url',
-            'media.*.type' => 'required|in:image,video',
-        ]);
+        // Normalize media URLs (replace spaces)
+    if ($request->has('media')) {
+        $media = collect($request->media)->map(function ($item) {
+            if (!empty($item['url'])) {
+                $item['url'] = str_replace(' ', '%20', trim($item['url']));
+            }
+            return $item;
+        })->toArray();
 
+        $request->merge(['media' => $media]);
+    }
+
+    $request->validate([
+        'title' => 'required|string|max:100',
+        'description' => 'nullable|string',
+        'type_id' => 'required|exists:ad_types,id',
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after_or_equal:start_date',
+        'status' => 'in:active,inactive,expired',
+        'media' => 'array',
+        'media.*.url' => 'required|url',
+        'media.*.type' => 'required|in:image,video',
+    ]);
         try {
             $ad = Ad::create($request->only([
                 'title',

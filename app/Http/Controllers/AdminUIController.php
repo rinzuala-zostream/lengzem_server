@@ -41,11 +41,6 @@ class AdminUIController extends Controller
                 
                 // New users in last 7 days
                 $newUsersThisWeek = User::where('created_at', '>=', Carbon::now()->subDays(7))->count();
-                
-                // Active users (users with some activity - has articles or comments)
-                $activeUsers = User::whereHas('articles')->orWhereHas('comments', function ($query) {
-                    $query->where('created_at', '>=', Carbon::now()->subDays(30));
-                })->count();
 
                 return array_merge($basicStats, [
                     'user_growth' => $userGrowth,

@@ -160,7 +160,7 @@ class RedeemCodeController extends Controller
             \Log::error("RedeemCodeController apply error: {$e->getMessage()}");
             return response()->json([
                 'status' => false,
-                'message' => 'Failed to apply redeem code.',
+                'message' => 'Failed to apply redeem code. ' . $e->getMessage(),
             ], 500);
         }
     }

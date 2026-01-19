@@ -82,35 +82,7 @@ class SubscriptionController extends Controller
             $userId = $validated['user_id'];
             $redeemId = null;
 
-            // ✅ Step 1: If redeem_code is entered, apply it first
-            if (!empty($validated['redeem_code'])) {
-                $redeemCode = strtoupper(trim($validated['redeem_code']));
-
-                $redeemController = new RedeemCodeController();
-                $redeemResponse = $redeemController->apply(new Request([
-                    'user_id' => $userId,
-                    'redeem_code' => $redeemCode,
-                    'subscription_id' => $plan->id,
-                    'status' => 'pending',
-                ]));
-
-                $redeemData = $redeemResponse->getData();
-
-                // ❌ Stop immediately if redeem apply failed
-                if (empty($redeemData) || !$redeemData->status) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => $redeemData->message ?? 'Failed to apply redeem code.',
-                    ], 400);
-                }
-
-                // ✅ Apply successful, get redeem_id
-                if (isset($redeemData->data->redeem->id)) {
-                    $redeemId = $redeemData->data->redeem->id;
-                }
-            }
-
-            // ✅ Step 2: Create the subscription
+            // ✅ Step 1: Create the subscription first
             $subscription = Subscription::create([
                 'user_id' => $userId,
                 'subscription_plan_id' => $validated['subscription_plan_id'],
@@ -119,17 +91,45 @@ class SubscriptionController extends Controller
                 'end_date' => $endDate,
                 'status' => $validated['status'] ?? 'pending',
                 'amount' => $request->get('amount', 0),
-                'redeem_id' => $redeemId, // set from applied code or null
+                'redeem_id' => null, // will update if redeem code applied
             ]);
 
+            // ✅ Step 2: If redeem_code is entered, apply it
+            if (!empty($validated['redeem_code'])) {
+                $redeemCode = strtoupper(trim($validated['redeem_code']));
+
+                $redeemController = new RedeemCodeController();
+                $redeemResponse = $redeemController->apply(new Request([
+                    'user_id' => $userId,
+                    'redeem_code' => $redeemCode,
+                    'subscription_id' => $subscription->id, // link to this subscription
+                    'status' => 'pending',
+                ]));
+
+                $redeemData = $redeemResponse->getData();
+
+                // ❌ Stop immediately if redeem apply failed
+                if (empty($redeemData) || !$redeemData->status) {
+                    // Delete subscription to avoid invalid FK / partial data
+                    $subscription->delete();
+
+                    return response()->json([
+                        'status' => false,
+                        'message' => $redeemData->message ?? 'Failed to apply redeem code.',
+                    ], 400);
+                }
+
+                // ✅ Apply successful, update subscription with redeem_id
+                if (isset($redeemData->data->redeem->id)) {
+                    $subscription->update(['redeem_id' => $redeemData->data->redeem->id]);
+                }
+            }
+
+            // ✅ Step 3: Return subscription
             return response()->json([
                 'status' => true,
-                'message' => $redeemId
-                    ? 'Subscription created successfully using redeem code.'
-                    : 'Subscription and new redeem code created successfully.',
-                'data' => [
-                    'subscription' => $subscription->fresh('redeemCode'),
-                ],
+                'message' => 'Subscription created successfully.',
+                'data' => $subscription->fresh('redeemCode'),
             ], 201);
 
         } catch (ValidationException $e) {

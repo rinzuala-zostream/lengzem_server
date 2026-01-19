@@ -120,11 +120,6 @@ class SubscriptionController extends Controller
                 'redeem_id' => $redeemId, // set from applied code or null
             ]);
 
-            // ✅ Step 3: If no redeem code used, generate a new one
-            
-            $redeem = RedeemCodeController::createRedeemCode($userId);
-            $subscription->update(['redeem_id' => $redeem->id]);
-
             return response()->json([
                 'status' => true,
                 'message' => $redeemId

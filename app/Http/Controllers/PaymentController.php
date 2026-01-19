@@ -80,6 +80,9 @@ class PaymentController extends Controller
                 if ($paymentSuccess && $paymentCompleted && $paymentAmount) {
                     $sub->status = 'active';
                     $sub->save();
+
+                    $redeem = RedeemCodeController::createRedeemCode($userId);
+                    $sub->update(['redeem_id' => $redeem->id]);
                 } else {
                     $sub->delete();
                 }

@@ -27,33 +27,29 @@ class SubscriptionPlanController extends Controller
         $redeemCode = null;
 
         if ($userId) {
-            // ✅ Load active subscription with redeemCode relation
+            // Load active subscription with redeemCode relation
             $activeSubscription = Subscription::with('redeemCode')
                 ->where('user_id', $userId)
-                ->where('status', 'active')
                 ->latest('id')
                 ->first();
 
-            if ($activeSubscription) {
+            if ($activeSubscription && $activeSubscription->status === 'active') {
                 $activePlanId = $activeSubscription->subscription_plan_id;
                 $currentPlan = $plans->firstWhere('id', $activePlanId);
-                $redeemCode = $activeSubscription->redeemCode; // ✅ may be null
+
             }
+           
+            $redeemCode = $activeSubscription->redeemCode->redeem_code;
+        
         }
 
-        // ✅ Mark current plan and attach redeem code (if any)
-        $plans = $plans->map(function ($plan) use ($currentPlan, $redeemCode) {
+        // Mark current plan
+        $plans = $plans->map(function ($plan) use ($currentPlan) {
             $plan->current_plan = $currentPlan && $plan->id === $currentPlan->id;
-
-            // ✅ Add redeem code if it exists (regardless of current plan)
-            if ($redeemCode) {
-                $plan->redeem_code = $redeemCode;
-            }
-
             return $plan;
         });
 
-        // ✅ Filter to only show upgradeable plans (price > current)
+        // Filter to only show upgradeable plans (price > current)
         if ($currentPlan) {
             $plans = $plans->filter(function ($plan) use ($currentPlan) {
                 return $plan->price > $currentPlan->price || $plan->current_plan;
@@ -63,7 +59,8 @@ class SubscriptionPlanController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Subscription plans retrieved successfully.',
-            'data' => $plans
+            'data' => $plans,
+            'redeem_code' => $redeemCode, // ✅ now returns actual code
         ], 200);
     }
 

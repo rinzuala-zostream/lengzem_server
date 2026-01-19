@@ -87,7 +87,7 @@ class RedeemCodeController extends Controller
                 'redeem_code' => 'required|string|max:20',
             ]);
 
-            $userId = $validated['user_id'];
+            $userId = (int) $validated['user_id'];
             $codeInput = strtoupper(trim($validated['redeem_code']));
 
             $redeem = RedeemCode::where('redeem_code', $codeInput)->first();
@@ -110,7 +110,6 @@ class RedeemCodeController extends Controller
             // Check expiry and deactivate if expired
             if ($redeem->expire_date && now()->greaterThan($redeem->expire_date)) {
                 $this->deactivateRedeemCode($redeem->id);
-
                 return response()->json([
                     'status' => false,
                     'message' => 'This redeem code has expired.',
@@ -118,11 +117,7 @@ class RedeemCodeController extends Controller
             }
 
             // Check if user has already used this code
-            $alreadyUsed = UserRedeem::where('user_id', $userId)
-                ->where('redeem_id', $redeem->id)
-                ->exists();
-
-            if ($alreadyUsed) {
+            if (UserRedeem::where('user_id', $userId)->where('redeem_id', $redeem->id)->exists()) {
                 return response()->json([
                     'status' => false,
                     'message' => 'You have already used this redeem code.',
@@ -136,7 +131,30 @@ class RedeemCodeController extends Controller
                 'apply_date' => now(),
             ]);
 
+            // Increment the apply count
             $redeem->incrementApplyCount();
+
+            // ✅ Determine benefit_end_month based on apply count
+            $applyCount = $redeem->no_of_apply; // current after increment
+            $newBenefitEndMonth = $redeem->benefit_end_month ?? now();
+
+            switch ($applyCount) {
+                case 1:
+                $newBenefitEndMonth = now()->addMonth();
+                break;
+            case 6:
+                $newBenefitEndMonth = now()->addMonths(3);
+                break;
+            case 10:
+                $newBenefitEndMonth = now()->addMonths(6);
+                break;
+            default:
+                    // For other applies, just extend by 1 month
+                    $newBenefitEndMonth = $redeem->benefit_end_month ?? now();
+            }
+
+            // Update the redeem record
+            $redeem->update(['benefit_end_month' => $newBenefitEndMonth]);
 
             return response()->json([
                 'status' => true,
@@ -146,8 +164,21 @@ class RedeemCodeController extends Controller
                     'user_redeem' => $userRedeem,
                 ],
             ]);
-        } catch (Exception $e) {
-            Log::error("RedeemCodeController apply error: {$e->getMessage()}");
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\TypeError $e) {
+            \Log::error("RedeemCodeController apply type error: {$e->getMessage()}");
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid data type provided.',
+            ], 400);
+        } catch (\Exception $e) {
+            \Log::error("RedeemCodeController apply error: {$e->getMessage()}");
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to apply redeem code.',

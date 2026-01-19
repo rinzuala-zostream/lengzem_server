@@ -16,8 +16,6 @@ class RedeemCode extends Model
 
     public $incrementing = true;
 
-    protected $keyType = 'int';
-
     /**
      * Mass assignable attributes
      */

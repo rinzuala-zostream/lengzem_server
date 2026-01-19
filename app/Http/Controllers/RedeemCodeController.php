@@ -87,7 +87,7 @@ class RedeemCodeController extends Controller
                 'redeem_code' => 'required|string|max:20',
             ]);
 
-            $userId = (int) $validated['user_id'];
+            $userId = $validated['user_id'];
             $codeInput = strtoupper(trim($validated['redeem_code']));
 
             $redeem = RedeemCode::where('redeem_code', $codeInput)->first();

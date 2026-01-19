@@ -11,105 +11,111 @@ use Illuminate\Validation\ValidationException;
 class SubscriptionController extends Controller
 {
     // Get all subscriptions with related plan and user
-public function index(Request $request)
-{
-    try {
-        $userId = $request->query('user_id');
-        $perPage = $request->query('per_page', 15);
-        
-        $query = Subscription::with(['plan', 'user']);
+    public function index(Request $request)
+    {
+        try {
+            $userId = $request->query('user_id');
+            $perPage = $request->query('per_page', 15);
 
-        if ($userId) {
-            $query->where('user_id', $userId);
-        }
+            $query = Subscription::with(['plan', 'user']);
 
-        // Optional: Add ordering
-        $query->orderBy('created_at', 'desc');
+            if ($userId) {
+                $query->where('user_id', $userId);
+            }
 
-        $subscriptions = $query->paginate($perPage);
+            // Optional: Add ordering
+            $query->orderBy('created_at', 'desc');
 
-        if ($subscriptions->isEmpty()) {
+            $subscriptions = $query->paginate($perPage);
+
+            if ($subscriptions->isEmpty()) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'No subscriptions found',
+                    'data' => [
+                        'data' => [],
+                        'current_page' => 1,
+                        'last_page' => 1,
+                        'per_page' => $perPage,
+                        'total' => 0
+                    ]
+                ]);
+            }
+
             return response()->json([
                 'status' => true,
-                'message' => 'No subscriptions found',
-                'data' => [
-                    'data' => [],
-                    'current_page' => 1,
-                    'last_page' => 1,
-                    'per_page' => $perPage,
-                    'total' => 0
-                ]
+                'message' => 'Subscriptions retrieved successfully.',
+                'data' => $subscriptions,
             ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to retrieve subscriptions.',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Subscriptions retrieved successfully.',
-            'data' => $subscriptions,
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Failed to retrieve subscriptions.',
-            'error' => $e->getMessage()
-        ], 500);
     }
-}
 
     // Store a new subscription
     public function store(Request $request)
     {
         try {
-            // Step 1: Validate input (except end_date/start_date logic)
             $validated = $request->validate([
-                'user_id' => 'required|exists:user,id',
+                'user_id' => 'required|exists:users,id',
                 'subscription_plan_id' => 'required|exists:subscription_plans,id',
                 'payment_id' => 'required|string',
                 'start_date' => 'nullable|date',
                 'status' => 'nullable|in:active,expired,cancelled,pending',
-                'amount' => 'nullable|numeric|min:0', // Optional amount field
+                'amount' => 'nullable|numeric|min:0',
             ]);
 
-            // Step 2: Use current date if start_date is not provided
             $startDate = $request->filled('start_date') ? Carbon::parse($request->start_date) : now();
 
-            // Step 3: Get plan and calculate end_date
             $plan = SubscriptionPlan::findOrFail($validated['subscription_plan_id']);
             $intervalValue = $plan->interval_value;
             $intervalUnit = $plan->interval_unit;
 
-            // Add duration to get end_date
             $endDate = $startDate->copy()->add($intervalUnit, $intervalValue);
 
-            // Step 4: Create the subscription
+            // ✅ Step 1: Create the subscription (redeem_code = null initially)
             $subscription = Subscription::create([
                 'user_id' => $validated['user_id'],
                 'subscription_plan_id' => $validated['subscription_plan_id'],
                 'payment_id' => $validated['payment_id'],
                 'start_date' => $startDate,
                 'end_date' => $endDate,
-                'status' => empty($validated['status']) ? 'pending' : $validated['status'],
-                'amount' => $request->get('amount', 0), // Default to 0 if not provided
+                'status' => $validated['status'] ?? 'pending',
+                'amount' => $request->get('amount', 0),
+                'redeem_id' => null,
             ]);
+
+            // ✅ Step 2: Generate redeem code (benefit_end_month = null)
+            $redeem = RedeemCodeController::createRedeemCode($validated['user_id']);
+
+            // ✅ Step 3: Update subscription with redeem_code ID
+            $subscription->update(['redeem_id' => $redeem->id]);
 
             return response()->json([
                 'status' => true,
-                'message' => 'Subscription created successfully.',
-                'data' => $subscription,
-            ]);
+                'message' => 'Subscription and redeem code created successfully.',
+                'data' => [
+                    'subscription' => $subscription->fresh('redeemCode'),
+                ],
+            ], 201);
+
         } catch (ValidationException $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Validation failed.',
                 'errors' => $e->errors(),
-            ]);
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'An error occurred while creating the subscription.',
                 'error' => $e->getMessage(),
-            ]);
+            ], 500);
         }
     }
 

@@ -34,12 +34,12 @@ class RedeemCode extends Model
      * Attribute casting
      */
     protected $casts = [
-        'no_of_apply'        => 'integer',
-        'is_active'          => 'boolean',
-        'benefit_end_month'  => 'date',
-        'expire_date'        => 'datetime',
-        'created_at'         => 'datetime',
-        'updated_at'         => 'datetime',
+        'no_of_apply' => 'integer',
+        'is_active' => 'boolean',
+        'benefit_end_month' => 'date',
+        'expire_date' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -47,8 +47,13 @@ class RedeemCode extends Model
      */
     protected $attributes = [
         'no_of_apply' => 0,
-        'is_active'   => true,
+        'is_active' => true,
     ];
+
+    public function subscription()
+    {
+        return $this->hasOne(Subscription::class, 'redeem_id', 'id');
+    }
 
     /* ============================================================
      |  Relationships

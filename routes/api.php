@@ -11,6 +11,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PreviewController;
 use App\Http\Controllers\RazorpayController;
+use App\Http\Controllers\RedeemCodeController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SubscriptionPlanController;
 use App\Http\Controllers\UserController;
@@ -163,4 +164,8 @@ Route::prefix('banners')->group(function () {
     Route::put('/{id}', [BannerController::class, 'update']);
     Route::delete('/{id}', [BannerController::class, 'destroy']);
 });
+
+//Redeem Code routes
+Route::post('/redeem-codes', [RedeemCodeController::class, 'store']);  // Admin generate
+Route::post('/redeem-codes/apply', [RedeemCodeController::class, 'apply']); // User apply
 

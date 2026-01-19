@@ -39,7 +39,7 @@ class Subscription extends Model
 
     public function redeemCode()
     {
-        return $this->belongsTo(RedeemCode::class, 'redeem_id');
+        return $this->belongsTo(RedeemCode::class, 'redeem_id', 'id');
     }
 
     public function toArray()

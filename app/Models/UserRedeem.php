@@ -34,6 +34,6 @@ class UserRedeem extends Model
      */
     public function redeem()
     {
-        return $this->belongsTo(Redeem::class);
+        return $this->belongsTo(RedeemCode::class);
     }
 }

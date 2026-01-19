@@ -29,27 +29,14 @@ class SubscriptionSchedule extends Command
     {
         $now = Carbon::now();
 
-        $subscriptions = Subscription::all();
+        // Update subscriptions that are active but not within start_date and end_date
+        $expiredCount = Subscription::where('status', 'active')
+            ->where(function ($query) use ($now) {
+                $query->where('start_date', '>', $now)   // Not started yet
+                    ->orWhere('end_date', '<', $now); // Already ended
+            })
+            ->update(['status' => 'expired']);
 
-        foreach ($subscriptions as $subscription) {
-            $start = Carbon::parse((string) $subscription->start_date);
-            $end = Carbon::parse((string) $subscription->end_date);
-            $newStatus = null;
-
-            if ($now->between($start, $end)) {
-                $newStatus = 'active';
-            } elseif ($now->gt($end)) {
-                $newStatus = 'expired';
-            }
-
-            if ($newStatus && $subscription->status !== $newStatus) {
-                $subscription->status = $newStatus;
-                $subscription->save();
-
-                $this->info("Updated subscription ID {$subscription->id} to '{$newStatus}'");
-            }
-        }
-
-        $this->info("✅ Subscription status update completed.");
+        $this->info("✅ Updated {$expiredCount} subscriptions to 'expired'.");
     }
 }

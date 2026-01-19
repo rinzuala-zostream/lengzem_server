@@ -91,7 +91,7 @@ class SubscriptionController extends Controller
                     'user_id' => $userId,
                     'redeem_code' => $redeemCode,
                     'subscription_id' => $plan->id,
-                    'status' => 'inactive',
+                    'status' => 'pending',
                 ]));
 
                 $redeemData = $redeemResponse->getData();

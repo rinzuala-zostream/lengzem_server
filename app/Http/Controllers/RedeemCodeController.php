@@ -86,7 +86,7 @@ class RedeemCodeController extends Controller
                 'user_id' => 'required|exists:user,id',
                 'redeem_code' => 'required|string|max:20',
                 'subscription_id' => 'nullable|exists:subscription_plans,id',
-                'status' => 'nullable|in:active,inactive',
+                'status' => 'nullable|in:active,pending',
             ]);
 
             $userId = $validated['user_id'];
@@ -132,7 +132,7 @@ class RedeemCodeController extends Controller
                 'redeem_id' => $redeem->id,
                 'apply_date' => now(),
                 'subscription_id' => $validated['subscription_id'] ?? null,
-                'status' => $validated['status'] ?? 'inactive',
+                'status' => $validated['status'] ?? 'pending',
             ]);
 
             return response()->json([
@@ -172,7 +172,7 @@ class RedeemCodeController extends Controller
     {
         try {
             $validated = $request->validate([
-                'status' => 'required|in:active,inactive',
+                'status' => 'required|in:active,pending',
             ]);
 
             // Step 1: Find all user_redeems for this subscription that need status change

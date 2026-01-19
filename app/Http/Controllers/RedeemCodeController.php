@@ -85,7 +85,7 @@ class RedeemCodeController extends Controller
             $validated = $request->validate([
                 'user_id' => 'required|exists:user,id',
                 'redeem_code' => 'required|string|max:20',
-                'subscription_id' => 'nullable|exists:subscription_plans,id',
+                'subscription_id' => 'nullable|exists:subscriptions,id',
                 'status' => 'nullable|in:active,pending',
             ]);
 

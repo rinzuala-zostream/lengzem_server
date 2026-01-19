@@ -33,14 +33,16 @@ class SubscriptionPlanController extends Controller
                 ->latest('id')
                 ->first();
 
-            if ($activeSubscription && $activeSubscription->status === 'active') {
-                $activePlanId = $activeSubscription->subscription_plan_id;
-                $currentPlan = $plans->firstWhere('id', $activePlanId);
+            if ($activeSubscription) {
+                $redeemCode = $activeSubscription->redeemCode;
+                
+                if ($activeSubscription->status === 'active') {
+                    $activePlanId = $activeSubscription->subscription_plan_id;
+                    $currentPlan = $plans->firstWhere('id', $activePlanId);
+                }
 
             }
-           
-            $redeemCode = $activeSubscription->redeemCode;
-        
+
         }
 
         // Mark current plan

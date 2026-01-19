@@ -68,6 +68,7 @@ class SubscriptionController extends Controller
                 'start_date' => 'nullable|date',
                 'status' => 'nullable|in:active,expired,cancelled,pending',
                 'amount' => 'nullable|numeric|min:0',
+                'redeem_code' => 'nullable|string|max:20',
             ]);
 
             $startDate = $request->filled('start_date') ? Carbon::parse($request->start_date) : now();
@@ -78,27 +79,57 @@ class SubscriptionController extends Controller
 
             $endDate = $startDate->copy()->add($intervalUnit, $intervalValue);
 
-            // ✅ Step 1: Create the subscription (redeem_code = null initially)
+            $userId = $validated['user_id'];
+            $redeemId = null;
+
+            // ✅ Step 1: If redeem_code is entered, apply it first
+            if (!empty($validated['redeem_code'])) {
+                $redeemCode = strtoupper(trim($validated['redeem_code']));
+
+                $redeemController = new RedeemCodeController();
+                $redeemResponse = $redeemController->apply(new Request([
+                    'user_id' => $userId,
+                    'redeem_code' => $redeemCode,
+                ]));
+
+                $redeemData = $redeemResponse->getData();
+
+                // ❌ Stop immediately if redeem apply failed
+                if (empty($redeemData) || !$redeemData->status) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => $redeemData->message ?? 'Failed to apply redeem code.',
+                    ], 400);
+                }
+
+                // ✅ Apply successful, get redeem_id
+                if (isset($redeemData->data->redeem->id)) {
+                    $redeemId = $redeemData->data->redeem->id;
+                }
+            }
+
+            // ✅ Step 2: Create the subscription
             $subscription = Subscription::create([
-                'user_id' => $validated['user_id'],
+                'user_id' => $userId,
                 'subscription_plan_id' => $validated['subscription_plan_id'],
                 'payment_id' => $validated['payment_id'],
                 'start_date' => $startDate,
                 'end_date' => $endDate,
                 'status' => $validated['status'] ?? 'pending',
                 'amount' => $request->get('amount', 0),
-                'redeem_id' => null,
+                'redeem_id' => $redeemId, // set from applied code or null
             ]);
 
-            // ✅ Step 2: Generate redeem code (benefit_end_month = null)
-            $redeem = RedeemCodeController::createRedeemCode($validated['user_id']);
-
-            // ✅ Step 3: Update subscription with redeem_code ID
+            // ✅ Step 3: If no redeem code used, generate a new one
+            
+            $redeem = RedeemCodeController::createRedeemCode($userId);
             $subscription->update(['redeem_id' => $redeem->id]);
 
             return response()->json([
                 'status' => true,
-                'message' => 'Subscription and redeem code created successfully.',
+                'message' => $redeemId
+                    ? 'Subscription created successfully using redeem code.'
+                    : 'Subscription and new redeem code created successfully.',
                 'data' => [
                     'subscription' => $subscription->fresh('redeemCode'),
                 ],
@@ -111,6 +142,7 @@ class SubscriptionController extends Controller
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
+            \Log::error("Subscription store error: {$e->getMessage()}");
             return response()->json([
                 'status' => false,
                 'message' => 'An error occurred while creating the subscription.',

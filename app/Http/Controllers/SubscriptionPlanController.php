@@ -39,7 +39,7 @@ class SubscriptionPlanController extends Controller
 
             }
            
-            $redeemCode = $activeSubscription->redeemCode->redeem_code;
+            $redeemCode = $activeSubscription->redeemCode;
         
         }
 

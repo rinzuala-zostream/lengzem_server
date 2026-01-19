@@ -82,6 +82,7 @@ class RedeemCodeController extends Controller
     public function apply(Request $request)
     {
         try {
+            // ✅ Validate safely
             $validated = $request->validate([
                 'user_id' => 'required|exists:users,id',
                 'redeem_code' => 'required|string|max:20',
@@ -107,29 +108,24 @@ class RedeemCodeController extends Controller
                 ], 403);
             }
 
-            // Check expiry and deactivate if expired
+            // Check expiry
             if ($redeem->expire_date && now()->greaterThan($redeem->expire_date)) {
                 $this->deactivateRedeemCode($redeem->id);
-
                 return response()->json([
                     'status' => false,
                     'message' => 'This redeem code has expired.',
                 ], 400);
             }
 
-            // Check if user has already used this code
-            $alreadyUsed = UserRedeem::where('user_id', $userId)
-                ->where('redeem_id', $redeem->id)
-                ->exists();
-
-            if ($alreadyUsed) {
+            // Check if already used
+            if (UserRedeem::where('user_id', $userId)->where('redeem_id', $redeem->id)->exists()) {
                 return response()->json([
                     'status' => false,
                     'message' => 'You have already used this redeem code.',
                 ], 409);
             }
 
-            // Apply the redeem code
+            // Apply code
             $userRedeem = UserRedeem::create([
                 'user_id' => $userId,
                 'redeem_id' => $redeem->id,
@@ -146,6 +142,19 @@ class RedeemCodeController extends Controller
                     'user_redeem' => $userRedeem,
                 ],
             ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\TypeError $e) {
+            Log::error("RedeemCodeController apply type error: {$e->getMessage()}");
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid data type provided.',
+            ], 400);
         } catch (Exception $e) {
             Log::error("RedeemCodeController apply error: {$e->getMessage()}");
             return response()->json([

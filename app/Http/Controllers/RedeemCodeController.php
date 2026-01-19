@@ -15,7 +15,7 @@ class RedeemCodeController extends Controller
     /**
      * Generate and store a redeem code for a user.
      */
-    public static function createRedeemCode(int $userId, ?Carbon $benefitEndDate = null): ?RedeemCode
+    public static function createRedeemCode(string $userId, ?Carbon $benefitEndDate = null): ?RedeemCode
     {
         try {
             $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

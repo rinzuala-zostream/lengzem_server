@@ -85,6 +85,8 @@ class RedeemCodeController extends Controller
             $validated = $request->validate([
                 'user_id' => 'required|exists:user,id',
                 'redeem_code' => 'required|string|max:20',
+                'subscription_id' => 'nullable|exists:subscription_plans,id',
+                'status' => 'nullable|in:active,inactive',
             ]);
 
             $userId = $validated['user_id'];
@@ -129,32 +131,9 @@ class RedeemCodeController extends Controller
                 'user_id' => $userId,
                 'redeem_id' => $redeem->id,
                 'apply_date' => now(),
+                'subscription_id' => $validated['subscription_id'] ?? null,
+                'status' => $validated['status'] ?? 'inactive',
             ]);
-
-            // Increment the apply count
-            $redeem->incrementApplyCount();
-
-            // ✅ Determine benefit_end_month based on apply count
-            $applyCount = $redeem->no_of_apply; // current after increment
-            $newBenefitEndMonth = $redeem->benefit_end_month ?? now();
-
-            switch ($applyCount) {
-                case 1:
-                $newBenefitEndMonth = now()->addMonth();
-                break;
-            case 6:
-                $newBenefitEndMonth = now()->addMonths(3);
-                break;
-            case 10:
-                $newBenefitEndMonth = now()->addMonths(6);
-                break;
-            default:
-                    // For other applies, just extend by 1 month
-                    $newBenefitEndMonth = $redeem->benefit_end_month ?? now();
-            }
-
-            // Update the redeem record
-            $redeem->update(['benefit_end_month' => $newBenefitEndMonth]);
 
             return response()->json([
                 'status' => true,
@@ -186,6 +165,77 @@ class RedeemCodeController extends Controller
         }
     }
 
+    /**
+     * Update redeem details by subscription ID
+     */
+    public function updateBySubscriptionId(Request $request, $subscriptionId)
+    {
+        try {
+            $validated = $request->validate([
+                'status' => 'required|in:active,inactive',
+            ]);
+
+            // Step 1: Find all user_redeems for this subscription that need status change
+            $userRedeems = UserRedeem::where('subscription_id', $subscriptionId)
+                ->where('status', '!=', $validated['status'])
+                ->get();
+
+            if ($userRedeems->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No user redeem records found for this subscription ID or already updated.',
+                ], 404);
+            }
+
+            // Step 2: Update status & count applies per redeem_id
+            $redeemCountMap = [];
+
+            foreach ($userRedeems as $userRedeem) {
+                // Update user_redeem status
+                $userRedeem->update([
+                    'status' => $validated['status'],
+                    'updated_at' => now(),
+                ]);
+
+                // Track redeem_id count if activating
+                if ($validated['status'] === 'active') {
+                    $redeemCountMap[$userRedeem->redeem_id] = ($redeemCountMap[$userRedeem->redeem_id] ?? 0) + 1;
+                }
+            }
+
+            // Step 3: Update RedeemCode no_of_apply counts
+            foreach ($redeemCountMap as $redeemId => $count) {
+                $redeemCode = RedeemCode::find($redeemId);
+                if ($redeemCode) {
+                    $redeemCode->increment('no_of_apply', $count);
+                }
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Redeem records updated successfully.',
+                'data' => [
+                    'updated_redeems' => $userRedeems,
+                    'updated_redeem_codes' => array_keys($redeemCountMap)
+                ],
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (Exception $e) {
+            Log::error("RedeemCodeController updateBySubscriptionId error: {$e->getMessage()}");
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to update redeem records.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    
     /**
      * ✅ Deactivate a redeem code by ID
      */

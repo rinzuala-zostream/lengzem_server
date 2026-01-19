@@ -15,6 +15,8 @@ class UserRedeem extends Model
         'user_id',
         'redeem_id',
         'apply_date',
+        'subscription_id',
+        'status',
     ];
 
     protected $casts = [

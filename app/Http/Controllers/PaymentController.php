@@ -83,6 +83,12 @@ class PaymentController extends Controller
 
                     $redeem = RedeemCodeController::createRedeemCode($userId);
                     $sub->update(['redeem_id' => $redeem->id]);
+
+                    $redeemCodeController = new RedeemCodeController();
+                    $redeemCodeController->updateBySubscriptionId(new Request([
+                        'status' => 'active',
+                    ]), $sub->id);
+                    
                 } else {
                     $sub->delete();
                 }

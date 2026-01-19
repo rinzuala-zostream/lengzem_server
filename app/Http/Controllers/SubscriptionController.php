@@ -90,6 +90,8 @@ class SubscriptionController extends Controller
                 $redeemResponse = $redeemController->apply(new Request([
                     'user_id' => $userId,
                     'redeem_code' => $redeemCode,
+                    'subscription_id' => $plan->id,
+                    'status' => 'inactive',
                 ]));
 
                 $redeemData = $redeemResponse->getData();

@@ -113,4 +113,9 @@ class RedeemCode extends Model
     {
         $this->update(['is_active' => false]);
     }
+
+    public function userRedeems()
+    {
+        return $this->hasMany(UserRedeem::class, 'redeem_id');
+    }
 }

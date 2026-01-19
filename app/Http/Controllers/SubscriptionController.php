@@ -62,7 +62,7 @@ class SubscriptionController extends Controller
     {
         try {
             $validated = $request->validate([
-                'user_id' => 'required|exists:users,id',
+                'user_id' => 'required|exists:user,id',
                 'subscription_plan_id' => 'required|exists:subscription_plans,id',
                 'payment_id' => 'required|string',
                 'start_date' => 'nullable|date',

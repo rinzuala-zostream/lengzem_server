@@ -83,11 +83,11 @@ class RedeemCodeController extends Controller
     {
         try {
             $validated = $request->validate([
-                'user_id' => 'required|exists:user,id',
+                'user_id' => 'required|exists:users,id',
                 'redeem_code' => 'required|string|max:20',
             ]);
 
-            $userId = $validated['user_id'];
+            $userId = (int) $validated['user_id'];
             $codeInput = strtoupper(trim($validated['redeem_code']));
 
             $redeem = RedeemCode::where('redeem_code', $codeInput)->first();
@@ -97,6 +97,14 @@ class RedeemCodeController extends Controller
                     'status' => false,
                     'message' => 'Invalid redeem code.',
                 ], 404);
+            }
+
+            // Prevent owner from redeeming their own code
+            if ($redeem->user_id === $userId) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'You cannot redeem your own code.',
+                ], 403);
             }
 
             // Check expiry and deactivate if expired
@@ -109,6 +117,7 @@ class RedeemCodeController extends Controller
                 ], 400);
             }
 
+            // Check if user has already used this code
             $alreadyUsed = UserRedeem::where('user_id', $userId)
                 ->where('redeem_id', $redeem->id)
                 ->exists();
@@ -120,6 +129,7 @@ class RedeemCodeController extends Controller
                 ], 409);
             }
 
+            // Apply the redeem code
             $userRedeem = UserRedeem::create([
                 'user_id' => $userId,
                 'redeem_id' => $redeem->id,

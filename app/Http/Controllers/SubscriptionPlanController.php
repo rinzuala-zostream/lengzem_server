@@ -37,29 +37,23 @@ class SubscriptionPlanController extends Controller
             if ($activeSubscription) {
                 $activePlanId = $activeSubscription->subscription_plan_id;
                 $currentPlan = $plans->firstWhere('id', $activePlanId);
-
-                // ✅ Get redeem code from active subscription (if any)
-                $redeemCode = $activeSubscription->redeemCode;
+                $redeemCode = $activeSubscription->redeemCode; // ✅ may be null
             }
         }
 
-        // Mark the current plan and filter others
+        // ✅ Mark current plan and attach redeem code (if any)
         $plans = $plans->map(function ($plan) use ($currentPlan, $redeemCode) {
-            $plan->current_plan = false;
+            $plan->current_plan = $currentPlan && $plan->id === $currentPlan->id;
 
-            if ($currentPlan && $plan->id === $currentPlan->id) {
-                $plan->current_plan = true;
-
-                // ✅ Only add redeem code if this is the current plan
-                if ($redeemCode) {
-                    $plan->redeem_code = $redeemCode;
-                }
+            // ✅ Add redeem code if it exists (regardless of current plan)
+            if ($redeemCode) {
+                $plan->redeem_code = $redeemCode;
             }
 
             return $plan;
         });
 
-        // Filter to only show upgradeable plans (price > current)
+        // ✅ Filter to only show upgradeable plans (price > current)
         if ($currentPlan) {
             $plans = $plans->filter(function ($plan) use ($currentPlan) {
                 return $plan->price > $currentPlan->price || $plan->current_plan;

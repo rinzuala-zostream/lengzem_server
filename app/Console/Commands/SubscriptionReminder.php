@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 class SubscriptionReminder extends Command
 {
     protected $signature = 'app:subscription-reminder';
-    protected $description = 'Send FCM reminders for subscriptions expiring in 3, 2 days, or today.';
+    protected $description = 'Send FCM reminders for subscriptions expiring in 7, 3, 2 days, or today.';
     protected $fcm;
 
     public function __construct(FCMNotificationController $fCMNotificationController)
@@ -22,7 +22,9 @@ class SubscriptionReminder extends Command
 
     public function handle()
     {
+        // ✅ Add 1-week reminder
         $dates = [
+            now()->addDays(7)->toDateString() => '🗓️ Subscription expires in 1 week',
             now()->addDays(3)->toDateString() => '📅 Subscription expires in 3 days',
             now()->addDays(2)->toDateString() => '📆 Subscription expires in 2 days',
             now()->toDateString() => '⚠️ Subscription expires today',
@@ -39,6 +41,8 @@ class SubscriptionReminder extends Command
             foreach ($subscriptions as $subscription) {
                 $user = $subscription->user;
                 $plan = $subscription->plan;
+                if (!$user || !$user->token) continue; // skip users without token
+
                 $endDate = Carbon::parse((string)$subscription->end_date)->format('F j, Y');
                 $message = "{$plan->name} plan will expire on {$endDate}.";
 
@@ -56,7 +60,7 @@ class SubscriptionReminder extends Command
         }
 
         $this->info($count === 0
-            ? "📭 No subscriptions expiring in 3 days, 2 days, or today."
+            ? "📭 No subscriptions expiring in 7, 3, 2 days, or today."
             : "✅ {$count} total reminder(s) sent.");
     }
 }

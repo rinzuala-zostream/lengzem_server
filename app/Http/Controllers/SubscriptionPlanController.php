@@ -6,9 +6,17 @@ use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use App\Http\Controllers\PaymentController;
 
 class SubscriptionPlanController extends Controller
 {
+    protected $paymentController;
+
+    public function __construct(PaymentController $paymentController)
+    {
+        $this->paymentController = $paymentController;
+    }
+
     // Get all subscription plans
     public function index(Request $request)
     {
@@ -39,10 +47,11 @@ class SubscriptionPlanController extends Controller
                 if ($activeSubscription->status === 'active') {
                     $activePlanId = $activeSubscription->subscription_plan_id;
                     $currentPlan = $plans->firstWhere('id', $activePlanId);
+                } elseif ($activeSubscription->status === 'pending') {
+                    $this->paymentController->checkPaymentStatus(new Request(['user_id' => $userId])); 
                 }
 
             }
-
         }
 
         // Mark current plan

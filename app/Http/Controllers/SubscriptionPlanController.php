@@ -50,7 +50,6 @@ class SubscriptionPlanController extends Controller
                 } elseif ($activeSubscription->status === 'pending') {
                     $this->paymentController->checkPaymentStatus(new Request(['user_id' => $userId])); 
                 }
-
             }
         }
 

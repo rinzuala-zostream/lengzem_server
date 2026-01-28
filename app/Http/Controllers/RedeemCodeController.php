@@ -192,7 +192,7 @@ class RedeemCodeController extends Controller
 
             foreach ($userRedeems as $userRedeem) {
                 // Update user_redeem status
-                $userRedeem->update([
+                UserRedeem::where('id', $userRedeem->id)->update([
                     'status' => $validated['status'],
                     'updated_at' => now(),
                 ]);

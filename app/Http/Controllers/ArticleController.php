@@ -145,6 +145,7 @@ class ArticleController extends Controller
                 'isCommentable' => 'nullable|boolean',
                 'isPremium' => 'nullable|boolean',
                 'published_at' => 'nullable|date',
+                'isNotify' => 'nullable|boolean',
             ];
 
             $data = $request->validate($rules);
@@ -201,8 +202,11 @@ class ArticleController extends Controller
                         'image' => $data['cover_image_url'] ?? '',
                         'key' => (string) $article->id, // or slug if you prefer
                     ]);
-                    // Assuming $this->fcm is an injected controller/service with ->send()
-                    $this->fcm->send($fakeRequest);
+                    
+                    if (!empty($data['isNotify']) && $data['isNotify']) {
+                        $this->fcm->send($fakeRequest);
+                    }
+                    
                 } catch (\Throwable $e) {
                     // Log and continue — don't fail the whole request
                     \Log::warning('FCM send failed for article ' . $article->id . ': ' . $e->getMessage());

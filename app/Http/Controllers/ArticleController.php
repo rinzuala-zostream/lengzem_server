@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\RedeemCode;
 use App\Models\Subscription;
 use Carbon\Carbon;
 use DB;
@@ -67,7 +68,7 @@ class ArticleController extends Controller
                 ->withCount('comments')
                 ->findOrFail($id);
 
-            // 🔐 If the article is premium, check subscription
+            // 🔐 If the article is premium, check subscription or redeem benefit
             if ($article->isPremium) {
                 if (!$userId) {
                     return response()->json([
@@ -76,10 +77,28 @@ class ArticleController extends Controller
                     ], 401);
                 }
 
+                // Check active subscription
                 $activeSubscription = Subscription::where('user_id', $userId)
                     ->where('status', 'active')
                     ->latest('id')
                     ->first();
+
+                // 🪄 If no subscription, check redeem benefit
+                if (!$activeSubscription) {
+                    $activeRedeem = RedeemCode::where('user_id', $userId)
+                        ->where('is_active', true)
+                        ->whereDate('benefit_end_month', '>=', now())
+                        ->where(function ($query) {
+                            $query->whereNull('expire_date')
+                                ->orWhere('expire_date', '>=', now());
+                        })
+                        ->first();
+
+                    // Treat redeem benefit as an active subscription
+                    if ($activeRedeem) {
+                        $activeSubscription = true;
+                    }
+                }
 
                 if (!$activeSubscription) {
                     return response()->json([
@@ -126,6 +145,7 @@ class ArticleController extends Controller
                 'isCommentable' => 'nullable|boolean',
                 'isPremium' => 'nullable|boolean',
                 'published_at' => 'nullable|date',
+                'isNotify' => 'nullable|boolean',
             ];
 
             $data = $request->validate($rules);
@@ -182,8 +202,11 @@ class ArticleController extends Controller
                         'image' => $data['cover_image_url'] ?? '',
                         'key' => (string) $article->id, // or slug if you prefer
                     ]);
-                    // Assuming $this->fcm is an injected controller/service with ->send()
-                    $this->fcm->send($fakeRequest);
+                    
+                    if (!empty($data['isNotify']) && $data['isNotify']) {
+                        $this->fcm->send($fakeRequest);
+                    }
+                    
                 } catch (\Throwable $e) {
                     // Log and continue — don't fail the whole request
                     \Log::warning('FCM send failed for article ' . $article->id . ': ' . $e->getMessage());
@@ -423,12 +446,12 @@ class ArticleController extends Controller
     {
         try {
             $article = Article::with([
-                    'author',
-                    'category',
-                    'tags',
-                    'media',
-                    'comments',
-                ])
+                'author',
+                'category',
+                'tags',
+                'media',
+                'comments',
+            ])
                 ->withCount('comments')
                 ->findOrFail($id);
 

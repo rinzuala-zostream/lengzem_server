@@ -43,12 +43,22 @@ class SubscriptionPlanController extends Controller
 
             if ($activeSubscription) {
                 $redeemCode = $activeSubscription->redeemCode;
-                
+
+                // ✅ Check redeem code expiry
+                if ($redeemCode && $redeemCode->is_active) {
+                    $benefitEnd = \Carbon\Carbon::parse($redeemCode->benefit_end_month);
+
+                    if (now()->greaterThan($benefitEnd)) {
+                        $redeemCode->update(['is_active' => false]);
+                    }
+                }
+
                 if ($activeSubscription->status === 'active') {
                     $activePlanId = $activeSubscription->subscription_plan_id;
                     $currentPlan = $plans->firstWhere('id', $activePlanId);
                 } elseif ($activeSubscription->status === 'pending') {
-                    $this->paymentController->checkPaymentStatus(new Request(['user_id' => $userId])); 
+                    // Check pending payment
+                    $this->paymentController->checkPaymentStatus(new Request(['user_id' => $userId]));
                 }
             }
         }
@@ -59,7 +69,7 @@ class SubscriptionPlanController extends Controller
             return $plan;
         });
 
-        // Filter to only show upgradeable plans (price > current)
+        // Filter to show only upgradeable plans (price > current)
         if ($currentPlan) {
             $plans = $plans->filter(function ($plan) use ($currentPlan) {
                 return $plan->price > $currentPlan->price || $plan->current_plan;
@@ -70,7 +80,7 @@ class SubscriptionPlanController extends Controller
             'status' => true,
             'message' => 'Subscription plans retrieved successfully.',
             'data' => $plans,
-            'redeem_code' => $redeemCode, // ✅ now returns actual code
+            'redeem_code' => $redeemCode, // ✅ updated redeem info
         ], 200);
     }
 

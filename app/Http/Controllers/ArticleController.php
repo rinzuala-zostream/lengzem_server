@@ -226,7 +226,7 @@ class ArticleController extends Controller
                 'title' => 'sometimes|string|max:255',
                 'summary' => 'nullable|string',
                 'content' => 'sometimes|string',
-                'author_id' => 'sometimes|exists:user,id',
+                'author_id' => 'nullable|exists:user,id',
                 'contributor' => 'nullable|exists:user,id',
                 'category_id' => 'nullable|exists:categories,id',
                 'slug' => 'nullable|string|max:255|unique:articles,slug',

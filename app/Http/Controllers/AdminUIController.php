@@ -139,81 +139,93 @@ class AdminUIController extends Controller
      * Get revenue statistics
      */
     private function getRevenueStats(): array
-    {
-        $today = Carbon::today();
-        
-        // Today's revenue
-        $revenueToday = Subscription::whereDate('start_date', $today)
-            ->sum('amount');
-        
-        // Yesterday's revenue
-        $revenueYesterday = Subscription::whereDate('start_date', $today->copy()->subDay())
-            ->sum('amount');
-        
-        // This week's revenue
-        $revenueThisWeek = Subscription::where('start_date', '>=', $today->copy()->startOfWeek())
-            ->sum('amount');
-        
-        // Last week's revenue
-        $revenueLastWeek = Subscription::whereBetween('start_date', [
+{
+    $today = Carbon::today();
+
+    // Base query for active subscriptions
+    $activeSubscriptions = Subscription::where('status', 'active');
+
+    // Today's revenue
+    $revenueToday = (clone $activeSubscriptions)
+        ->whereDate('start_date', $today)
+        ->sum('amount');
+
+    // Yesterday's revenue
+    $revenueYesterday = (clone $activeSubscriptions)
+        ->whereDate('start_date', $today->copy()->subDay())
+        ->sum('amount');
+
+    // This week's revenue
+    $revenueThisWeek = (clone $activeSubscriptions)
+        ->where('start_date', '>=', $today->copy()->startOfWeek())
+        ->sum('amount');
+
+    // Last week's revenue
+    $revenueLastWeek = (clone $activeSubscriptions)
+        ->whereBetween('start_date', [
             $today->copy()->subWeek()->startOfWeek(),
             $today->copy()->subWeek()->endOfWeek()
-        ])->sum('amount');
-        
-        // This month's revenue
-        $revenueThisMonth = Subscription::where('start_date', '>=', $today->copy()->startOfMonth())
-            ->sum('amount');
-        
-        // Last month's revenue
-        $revenueLastMonth = Subscription::whereBetween('start_date', [
+        ])
+        ->sum('amount');
+
+    // This month's revenue
+    $revenueThisMonth = (clone $activeSubscriptions)
+        ->where('start_date', '>=', $today->copy()->startOfMonth())
+        ->sum('amount');
+
+    // Last month's revenue
+    $revenueLastMonth = (clone $activeSubscriptions)
+        ->whereBetween('start_date', [
             $today->copy()->subMonth()->startOfMonth(),
             $today->copy()->subMonth()->endOfMonth()
-        ])->sum('amount');
-        
-        // This year's revenue
-        $revenueThisYear = Subscription::where('start_date', '>=', $today->copy()->startOfYear())
-            ->sum('amount');
-        
-        // Total revenue (all time)
-        $revenueTotal = Subscription::sum('amount');
-        
-        // Calculate growth percentages
-        $dailyGrowth = $revenueYesterday > 0 
-            ? (($revenueToday - $revenueYesterday) / $revenueYesterday) * 100 
-            : ($revenueToday > 0 ? 100 : 0);
-        
-        $weekGrowth = $revenueLastWeek > 0 
-            ? (($revenueThisWeek - $revenueLastWeek) / $revenueLastWeek) * 100 
-            : ($revenueThisWeek > 0 ? 100 : 0);
-        
-        $monthGrowth = $revenueLastMonth > 0 
-            ? (($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100 
-            : ($revenueThisMonth > 0 ? 100 : 0);
+        ])
+        ->sum('amount');
 
-        return [
-            'today' => floatval($revenueToday),
-            'yesterday' => floatval($revenueYesterday),
-            'this_week' => floatval($revenueThisWeek),
-            'last_week' => floatval($revenueLastWeek),
-            'this_month' => floatval($revenueThisMonth),
-            'last_month' => floatval($revenueLastMonth),
-            'this_year' => floatval($revenueThisYear),
-            'total' => floatval($revenueTotal),
-            'daily_growth_percentage' => round($dailyGrowth, 1),
-            'weekly_growth_percentage' => round($weekGrowth, 1),
-            'monthly_growth_percentage' => round($monthGrowth, 1),
-            'formatted' => [
-                'today' => '₹' . number_format($revenueToday, 2),
-                'yesterday' => '₹' . number_format($revenueYesterday, 2),
-                'this_week' => '₹' . number_format($revenueThisWeek, 2),
-                'last_week' => '₹' . number_format($revenueLastWeek, 2),
-                'this_month' => '₹' . number_format($revenueThisMonth, 2),
-                'last_month' => '₹' . number_format($revenueLastMonth, 2),
-                'this_year' => '₹' . number_format($revenueThisYear, 2),
-                'total' => '₹' . number_format($revenueTotal, 2),
-            ]
-        ];
-    }
+    // This year's revenue
+    $revenueThisYear = (clone $activeSubscriptions)
+        ->where('start_date', '>=', $today->copy()->startOfYear())
+        ->sum('amount');
+
+    // Total revenue (all time)
+    $revenueTotal = (clone $activeSubscriptions)->sum('amount');
+
+    // Growth calculations
+    $dailyGrowth = $revenueYesterday > 0
+        ? (($revenueToday - $revenueYesterday) / $revenueYesterday) * 100
+        : ($revenueToday > 0 ? 100 : 0);
+
+    $weekGrowth = $revenueLastWeek > 0
+        ? (($revenueThisWeek - $revenueLastWeek) / $revenueLastWeek) * 100
+        : ($revenueThisWeek > 0 ? 100 : 0);
+
+    $monthGrowth = $revenueLastMonth > 0
+        ? (($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100
+        : ($revenueThisMonth > 0 ? 100 : 0);
+
+    return [
+        'today' => (float) $revenueToday,
+        'yesterday' => (float) $revenueYesterday,
+        'this_week' => (float) $revenueThisWeek,
+        'last_week' => (float) $revenueLastWeek,
+        'this_month' => (float) $revenueThisMonth,
+        'last_month' => (float) $revenueLastMonth,
+        'this_year' => (float) $revenueThisYear,
+        'total' => (float) $revenueTotal,
+        'daily_growth_percentage' => round($dailyGrowth, 1),
+        'weekly_growth_percentage' => round($weekGrowth, 1),
+        'monthly_growth_percentage' => round($monthGrowth, 1),
+        'formatted' => [
+            'today' => '₹' . number_format($revenueToday, 2),
+            'yesterday' => '₹' . number_format($revenueYesterday, 2),
+            'this_week' => '₹' . number_format($revenueThisWeek, 2),
+            'last_week' => '₹' . number_format($revenueLastWeek, 2),
+            'this_month' => '₹' . number_format($revenueThisMonth, 2),
+            'last_month' => '₹' . number_format($revenueLastMonth, 2),
+            'this_year' => '₹' . number_format($revenueThisYear, 2),
+            'total' => '₹' . number_format($revenueTotal, 2),
+        ]
+    ];
+}
 
     /**
      * Get users per day for the last N days

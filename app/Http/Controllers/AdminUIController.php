@@ -565,30 +565,21 @@ class AdminUIController extends Controller
     /**
      * Article add na mi tur
      */
-    public function articleAddRes(Request $request)
-    {
-        $role = $request->query('role'); // admin | editor
+    public function articleAddRes()
+{
+    // Users with role admin OR editor
+    $users = User::whereIn('role', ['admin', 'editor'])->get();
 
-        if (!in_array($role, ['admin', 'editor'])) {
-            return response()->json([
-                'message' => 'Invalid role'
-            ], 400);
-        }
+    // All categories
+    $categories = Category::all();
 
-        // Users filtered by role
-        $users = User::where('role', $role)->get();
+    // All tags
+    $tags = Tag::all();
 
-        // All categories
-        $categories = Category::all();
-
-        // All tags
-        $tags = Tag::all();
-
-        return response()->json([
-            'role' => $role,
-            'users' => $users,
-            'categories' => $categories,
-            'tags' => $tags,
-        ]);
-    }
+    return response()->json([
+        'users' => $users,
+        'categories' => $categories,
+        'tags' => $tags,
+    ]);
+}
 }

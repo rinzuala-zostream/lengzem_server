@@ -11,6 +11,7 @@ class Article extends Model
 
     protected $fillable = [
         'author_id',
+        'isContributor',
         'contributor',
         'category_id',
         'title',
@@ -19,17 +20,13 @@ class Article extends Model
         'excerpt',
         'scheduled_publish_time',
         'status', // draft, published, archived
+        'isApproved',
         'isCommentable',
         'isPremium',
         'cover_image_url',
         'summary',
         'published_at',
-    ];
-
-    protected $casts = [
-        'isCommentable' => 'boolean',
-        'isPremium' => 'boolean',
-        'contributor' => 'integer',
+        'isNotify',
     ];
 
     protected $dates = ['published_at'];

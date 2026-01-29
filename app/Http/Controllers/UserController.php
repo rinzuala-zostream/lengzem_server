@@ -67,6 +67,7 @@ class UserController extends Controller
                 'address' => ['nullable', 'string', 'max:50'],
                 'dob' => ['nullable', 'date'], 
                 'profile_image_url' => 'nullable|url',
+                'isApproved' => 'nullable|boolean',
                 'token' => 'nullable|string',
             ]);
 
@@ -125,6 +126,7 @@ class UserController extends Controller
                 'address' => ['nullable', 'string', 'max:50'],
                 'dob' => ['nullable', 'date'], 
                 'profile_image_url' => ['nullable', 'url'],
+                'isApproved' => ['nullable', 'boolean'],
                 'token' => ['nullable', 'string'],
             ]);
 

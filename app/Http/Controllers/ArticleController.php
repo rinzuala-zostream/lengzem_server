@@ -135,9 +135,11 @@ class ArticleController extends Controller
                 'content' => 'required|string',
                 'slug' => 'nullable|string|max:255|unique:articles,slug',
                 'author_id' => 'nullable|exists:user,id',
+                'isContributor' => 'nullable|boolean',
                 'contributor' => 'nullable|exists:user,id',
                 'category_id' => 'nullable|exists:categories,id',
                 'status' => 'required|in:Draft,Published,Scheduled,draft,published,scheduled',
+                'isApproved' => 'nullable|boolean',
                 'scheduled_publish_time' => 'nullable|date',
                 'cover_image_url' => 'nullable|string', // change to 'url' if always absolute
                 'tags' => 'nullable|array',
@@ -250,17 +252,20 @@ class ArticleController extends Controller
                 'summary' => 'nullable|string',
                 'content' => 'sometimes|string',
                 'author_id' => 'nullable|exists:user,id',
+                'isContributor' => 'nullable|boolean',
                 'contributor' => 'nullable|exists:user,id',
                 'category_id' => 'nullable|exists:categories,id',
                 'slug' => 'nullable|string|max:255|unique:articles,slug',
                 'isCommentable' => 'nullable|boolean',
                 'isPremium' => 'nullable|boolean',
                 'status' => 'sometimes|in:Draft,Published,Scheduled',
+                'isApproved' => 'nullable|boolean',
                 'scheduled_publish_time' => 'nullable|date',
                 'cover_image_url' => 'nullable|string',
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id',
                 'published_at' => 'nullable|date',
+                'isNotify' => 'nullable|boolean',
             ]);
 
             if (isset($data['title'])) {

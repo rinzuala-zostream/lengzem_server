@@ -34,6 +34,19 @@ class User extends Authenticatable
     return $this->hasMany(Article::class, 'author_id', 'id');
 }
 
+/* =======================
+     | Notifications
+     ======================= */
+     public function notifications()
+{
+    return $this->morphMany(Notification::class, 'notifiable');
+}
+
+public function triggeredNotifications()
+{
+    return $this->hasMany(Notification::class, 'actor_id');
+}
+
     public function toArray()
     {
         $array = parent::toArray();

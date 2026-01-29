@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Notification;
 use App\Http\Controllers\AuthorController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -53,59 +54,93 @@ class UserController extends Controller
     }
 
     // Create new user
-    public function store(Request $request)
-    {
-        try {
-            // Validate the incoming request
-            $data = $request->validate([
-                'id' => 'required|string|max:100',
-                'name' => 'nullable|string|max:100',
-                'phone' => 'nullable|string|max:15',
-                'email' => 'nullable|email', // Allow email without uniqueness check
-                'role' => ['nullable', Rule::in(['admin', 'editor', 'reader'])],
-                'bio' => 'nullable|string',
-                'address' => ['nullable', 'string', 'max:50'],
-                'dob' => ['nullable', 'date'], 
-                'profile_image_url' => 'nullable|url',
-                'isApproved' => 'nullable|boolean',
-                'token' => 'nullable|string',
-            ]);
+public function store(Request $request)
+{
+    try {
+        $data = $request->validate([
+            'id' => 'required|string|max:100',
+            'name' => 'nullable|string|max:100',
+            'phone' => 'nullable|string|max:15',
+            'email' => 'nullable|email',
+            'role' => ['nullable', Rule::in(['admin', 'editor', 'reader'])],
+            'bio' => 'nullable|string',
+            'address' => ['nullable', 'string', 'max:50'],
+            'dob' => ['nullable', 'date'],
+            'profile_image_url' => 'nullable|url',
+            'isApproved' => 'nullable|boolean',
+            'token' => 'nullable|string',
+        ]);
 
-            // Check if the email already exists within the same user
-            if (!empty($data['email'])) {
-                $existingUser = User::where('email', $data['email'])->where('id', '!=', $data['id'])->first();
-                if ($existingUser) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'This email is already associated with another user.',
-                    ]);
-                }
+        // Email uniqueness check
+        if (!empty($data['email'])) {
+            $existingUser = User::where('email', $data['email'])
+                ->where('id', '!=', $data['id'])
+                ->first();
+
+            if ($existingUser) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'This email is already associated with another user.',
+                ]);
             }
+        }
 
-            // Create or update the user
-            $user = User::updateOrCreate(['id' => $data['id']], $data);
+        // Detect create vs update
+        $isNewUser = !User::where('id', $data['id'])->exists();
 
-            return response()->json([
-                'status' => true,
-                'message' => 'User created successfully.',
-                'data' => $user
-            ]);
+        // Force approval false for admin/editor
+        if (in_array($data['role'] ?? null, ['admin', 'editor'])) {
+            $data['isApproved'] = false;
+        }
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation failed.',
-                'error' => $e->errors()
-            ]);
+        // Create or update user
+        $user = User::updateOrCreate(
+            ['id' => $data['id']],
+            $data
+        );
 
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to create user.',
-                'error' => $e->getMessage()
+        /**
+         * 🔔 Create notification ONLY IF:
+         * - New user
+         * - Role is admin/editor
+         * - Not approved
+         */
+        if (
+            $isNewUser &&
+            in_array($user->role, ['admin', 'editor']) &&
+            !$user->isApproved
+        ) {
+            Notification::create([
+                'notifiable_type' => User::class,
+                'notifiable_id'   => $user->id,
+                'actor_id'        => auth()->id(), // who created this user (if logged in)
+                'action'          => 'user_created',
+                'message'         => "New {$user->role} account pending approval",
+                'target_role'     => 'admin',
+                'status'          => 'pending',
             ]);
         }
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'User created successfully.',
+            'data'    => $user
+        ]);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Validation failed.',
+            'error' => $e->errors()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Failed to create user.',
+            'error' => $e->getMessage()
+        ]);
     }
+}
 
     // Update user
     public function update(Request $request, $id)

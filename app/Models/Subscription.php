@@ -42,6 +42,14 @@ class Subscription extends Model
         return $this->belongsTo(RedeemCode::class, 'redeem_id', 'id');
     }
 
+    /* =======================
+     | Notifications
+     ======================= */
+     public function notifications()
+{
+    return $this->morphMany(Notification::class, 'notifiable');
+}
+
     public function toArray()
     {
         $array = parent::toArray();

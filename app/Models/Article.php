@@ -87,6 +87,14 @@ class Article extends Model
     }
 
     /* =======================
+     | Notifications
+     ======================= */
+     public function notifications()
+{
+    return $this->morphMany(Notification::class, 'notifiable');
+}
+
+    /* =======================
      | Serialization
      ======================= */
 

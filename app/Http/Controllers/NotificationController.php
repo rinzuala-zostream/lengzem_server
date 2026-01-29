@@ -139,18 +139,6 @@ class NotificationController extends Controller
      */
     public function approve(Request $request, $id)
     {
-        $request->validate([
-        'role' => 'required|string|in:admin,editor,reader'
-    ]);
-
-    $role = $request->role;
-
-    if (!in_array($role, ['admin', 'editor'])) {
-        return response()->json([
-            'data' => [],
-            'message' => 'No notifications for this role'
-        ]);
-    }
 
         $notification = Notification::with('notifiable')->findOrFail($id);
 

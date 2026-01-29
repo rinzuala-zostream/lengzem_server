@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\RedeemCode;
 use App\Models\Subscription;
+use App\Models\Notification;
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
@@ -123,124 +125,148 @@ class ArticleController extends Controller
     }
 
     public function store(Request $request)
-    {
-        try {
-            // Normalize status to lowercase for consistency with DB enums
-            $status = strtolower((string) $request->input('status'));
+{
+    DB::beginTransaction();
 
-            // Base rules
-            $rules = [
-                'title' => 'required|string|max:255',
-                'summary' => 'nullable|string',
-                'content' => 'required|string',
-                'slug' => 'nullable|string|max:255|unique:articles,slug',
-                'author_id' => 'nullable|exists:user,id',
-                'isContributor' => 'nullable|boolean',
-                'contributor' => 'nullable|exists:user,id',
-                'category_id' => 'nullable|exists:categories,id',
-                'status' => 'required|in:Draft,Published,Scheduled,draft,published,scheduled',
-                'isApproved' => 'nullable|boolean',
-                'scheduled_publish_time' => 'nullable|date',
-                'cover_image_url' => 'nullable|string', // change to 'url' if always absolute
-                'tags' => 'nullable|array',
-                'tags.*' => 'exists:tags,id',
-                'isCommentable' => 'nullable|boolean',
-                'isPremium' => 'nullable|boolean',
-                'published_at' => 'nullable|date',
-                'isNotify' => 'nullable|boolean',
-            ];
+    try {
+        // Normalize status
+        $status = strtolower((string) $request->input('status'));
 
-            $data = $request->validate($rules);
+        $rules = [
+            'title' => 'required|string|max:255',
+            'summary' => 'nullable|string',
+            'content' => 'required|string',
+            'slug' => 'nullable|string|max:255|unique:articles,slug',
+            'author_id' => 'nullable|exists:user,id',
+            'isContributor' => 'nullable|boolean',
+            'contributor' => 'nullable|exists:user,id',
+            'category_id' => 'nullable|exists:categories,id',
+            'status' => 'required|in:Draft,Published,Scheduled,draft,published,scheduled',
+            'isApproved' => 'nullable|boolean',
+            'scheduled_publish_time' => 'nullable|date',
+            'cover_image_url' => 'nullable|string',
+            'tags' => 'nullable|array',
+            'tags.*' => 'exists:tags,id',
+            'isCommentable' => 'nullable|boolean',
+            'isPremium' => 'nullable|boolean',
+            'published_at' => 'nullable|date',
+            'isNotify' => 'nullable|boolean',
+        ];
 
-            // Normalize status casing
-            $data['status'] = $status; // 'draft' | 'published' | 'scheduled'
+        $data = $request->validate($rules);
 
-            // Auto-generate slug if not provided, ensure uniqueness
-            $baseSlug = $data['slug'] ?? Str::slug($data['title']);
-            $slug = $baseSlug;
-            $i = 1;
-            while (Article::where('slug', $slug)->exists()) {
-                $slug = $baseSlug . '-' . $i++;
-            }
-            $data['slug'] = $slug;
+        // Normalize status
+        $data['status'] = $status;
 
-            // Timestamps logic
-            if ($data['status'] === 'published') {
-                // Set published_at to now if not provided
-                $data['published_at'] = !empty($data['published_at'])
-                    ? Carbon::parse($data['published_at'])
-                    : now();
-                // a published article shouldn't carry a scheduled time
-                $data['scheduled_publish_time'] = null;
-            } elseif ($data['status'] === 'scheduled') {
-                // ensure scheduled_publish_time exists (rule above enforces) and clear published_at
-                $data['published_at'] = null;
-            } else { // draft
-                $data['published_at'] = null;
-                $data['scheduled_publish_time'] = null;
-            }
-
-            // Default booleans
-            $data['isCommentable'] = array_key_exists('isCommentable', $data) ? (bool) $data['isCommentable'] : true;
-            $data['isPremium'] = array_key_exists('isPremium', $data) ? (bool) $data['isPremium'] : false;
-
-            /** @var Article $article */
-            $article = Article::create($data);
-
-            if (!empty($data['tags'])) {
-                $article->tags()->sync($data['tags']);
-            }
-
-            // Try FCM only when published
-            if ($data['status'] === 'published') {
-                try {
-                    // Build a concise body from summary or content
-                    $bodyText = $data['summary'] ?? Str::limit(strip_tags($data['content']), 140);
-                    $fakeRequest = new Request([
-                        'type' => 'topic',
-                        'recipient' => 'all',
-                        'title' => $data['title'],
-                        'body' => $bodyText,
-                        'image' => $data['cover_image_url'] ?? '',
-                        'key' => (string) $article->id, // or slug if you prefer
-                    ]);
-                    
-                    if (!empty($data['isNotify']) && $data['isNotify']) {
-                        $this->fcm->send($fakeRequest);
-                    }
-                    
-                } catch (\Throwable $e) {
-                    // Log and continue — don't fail the whole request
-                    \Log::warning('FCM send failed for article ' . $article->id . ': ' . $e->getMessage());
-                }
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Article created successfully.',
-                'data' => $article->load('tags'),
-            ], 201);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            if (DB::transactionLevel() > 0)
-                DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation failed.',
-                'errors' => $e->errors(),
-            ], 422);
-        } catch (\Throwable $e) {
-            if (DB::transactionLevel() > 0)
-                DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to create article.',
-                'error' => $e->getMessage(),
-            ], 500);
+        // Slug generation
+        $baseSlug = $data['slug'] ?? Str::slug($data['title']);
+        $slug = $baseSlug;
+        $i = 1;
+        while (Article::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $i++;
         }
+        $data['slug'] = $slug;
+
+        // Force approval false for contributor articles
+        if (!empty($data['isContributor']) && $data['isContributor'] === true) {
+            $data['isApproved'] = false;
+        }
+
+        // Status timestamps
+        if ($data['status'] === 'published') {
+            $data['published_at'] = !empty($data['published_at'])
+                ? Carbon::parse($data['published_at'])
+                : now();
+            $data['scheduled_publish_time'] = null;
+        } elseif ($data['status'] === 'scheduled') {
+            $data['published_at'] = null;
+        } else {
+            $data['published_at'] = null;
+            $data['scheduled_publish_time'] = null;
+        }
+
+        // Defaults
+        $data['isCommentable'] = $data['isCommentable'] ?? true;
+        $data['isPremium'] = $data['isPremium'] ?? false;
+
+        /** @var Article $article */
+        $article = Article::create($data);
+
+        // Tags
+        if (!empty($data['tags'])) {
+            $article->tags()->sync($data['tags']);
+        }
+
+        /**
+         * 🔔 Create admin approval notification
+         * ONLY for contributor articles
+         */
+        if (
+            !empty($article->isContributor) &&
+            !$article->isApproved
+        ) {
+            Notification::create([
+                'notifiable_type' => Article::class,
+                'notifiable_id'   => $article->id,
+                'actor_id'        => auth()->id(),
+                'action'          => 'article_created',
+                'message'         => 'New contributor article pending approval',
+                'target_role'     => 'admin',
+                'status'          => 'pending',
+            ]);
+        }
+
+        /**
+         * 📢 FCM (unchanged – separate concern)
+         */
+        if ($data['status'] === 'published' && !empty($data['isNotify'])) {
+            try {
+                $bodyText = $data['summary']
+                    ?? Str::limit(strip_tags($data['content']), 140);
+
+                $fakeRequest = new Request([
+                    'type' => 'topic',
+                    'recipient' => 'all',
+                    'title' => $data['title'],
+                    'body' => $bodyText,
+                    'image' => $data['cover_image_url'] ?? '',
+                    'key' => (string) $article->id,
+                ]);
+
+                $this->fcm->send($fakeRequest);
+
+            } catch (\Throwable $e) {
+                \Log::warning(
+                    'FCM send failed for article ' . $article->id . ': ' . $e->getMessage()
+                );
+            }
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Article created successfully.',
+            'data' => $article->load('tags'),
+        ], 201);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        DB::rollBack();
+        return response()->json([
+            'status' => false,
+            'message' => 'Validation failed.',
+            'errors' => $e->errors(),
+        ], 422);
+
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        return response()->json([
+            'status' => false,
+            'message' => 'Failed to create article.',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
 
     public function update(Request $request, $id)
     {

@@ -24,6 +24,7 @@ use App\Http\Controllers\MediaController;
 use App\Http\Controllers\UserDeleteController;
 use App\Http\Controllers\VideoController;
 use App\Http\Controllers\AdminUIController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\BannerController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -168,4 +169,16 @@ Route::prefix('banners')->group(function () {
 //Redeem Code routes
 Route::post('/redeem-codes', [RedeemCodeController::class, 'store']);  // Admin generate
 Route::post('/redeem-codes/apply', [RedeemCodeController::class, 'apply']); // User apply
+
+//Notification routes
+Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications', [NotificationController::class, 'store']);
+
+    Route::post('/notifications/article/{id}', [NotificationController::class, 'articleCreated']);
+    Route::post('/notifications/subscription/{id}', [NotificationController::class, 'subscriptionCreated']);
+    Route::post('/notifications/user/{id}', [NotificationController::class, 'userCreated']);
+
+    Route::post('/notifications/{id}/approve', [NotificationController::class, 'approve']);
+    Route::post('/notifications/{id}/reject', [NotificationController::class, 'reject']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
 

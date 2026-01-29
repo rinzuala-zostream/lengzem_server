@@ -14,6 +14,7 @@ use App\Models\Video;
 use App\Models\AudioModel;
 use App\Models\Article;
 use App\Models\Category;
+use App\Models\Tag;
 
 class AdminUIController extends Controller
 {
@@ -558,5 +559,35 @@ class AdminUIController extends Controller
             default:
                 return $periodValue;
         }
+    }
+
+    /**
+     * Article add na mi tur
+     */
+    public function articleAddRes(Request $request)
+    {
+        $role = $request->query('role'); // admin | editor
+
+        if (!in_array($role, ['admin', 'editor'])) {
+            return response()->json([
+                'message' => 'Invalid role'
+            ], 400);
+        }
+
+        // Users filtered by role
+        $users = User::where('role', $role)->get();
+
+        // All categories
+        $categories = Category::all();
+
+        // All tags
+        $tags = Tag::all();
+
+        return response()->json([
+            'role' => $role,
+            'users' => $users,
+            'categories' => $categories,
+            'tags' => $tags,
+        ]);
     }
 }

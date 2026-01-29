@@ -155,6 +155,7 @@ Route::post('/fcm/send', [FCMNotificationController::class, 'send']);
 
 //Admin UI Data Route
 Route::get('/admin/dashboard', [AdminUIController::class, 'index']);
+Route::get('/admin/article-add-data', [AdminUIController::class, 'articleAddRes']);
 
 // Banner Model Snippet from app/Models/Banner.php
 Route::prefix('banners')->group(function () {

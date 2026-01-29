@@ -25,6 +25,7 @@ class User extends Authenticatable
         'bio',
         'address',
         'dob',
+        'isApproved',
         'profile_image_url',
         'token',
     ];

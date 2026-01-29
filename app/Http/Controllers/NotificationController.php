@@ -17,12 +17,12 @@ class NotificationController extends Controller
     public function index(Request $request)
 {
     $request->validate([
-        'user_id' => 'required|string'
+        'role' => 'required|string|in:admin,editor,reader'
     ]);
 
-    $user = User::where('id', $request->user_id)->firstOrFail();
+    $role = $request->role;
 
-    if (!in_array($user->role, ['admin', 'editor'])) {
+    if (!in_array($role, ['admin', 'editor'])) {
         return response()->json([
             'data' => [],
             'message' => 'No notifications for this role'
@@ -30,13 +30,9 @@ class NotificationController extends Controller
     }
 
     $notifications = Notification::query()
-        ->where('target_role', $user->role)
-        ->when($request->status, fn ($q) =>
-            $q->where('status', $request->status)
-        )
-        ->when($request->boolean('unread'), fn ($q) =>
-            $q->where('is_read', false)
-        )
+        ->where('target_role', $role)
+        ->when($request->status, fn ($q) => $q->where('status', $request->status))
+        ->when($request->boolean('unread'), fn ($q) => $q->where('is_read', false))
         ->latest()
         ->with(['actor', 'notifiable'])
         ->paginate(15);

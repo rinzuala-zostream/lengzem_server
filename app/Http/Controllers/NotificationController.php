@@ -7,7 +7,6 @@ use App\Models\Article;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Events\NotificationCreated;
 
 class NotificationController extends Controller
 {
@@ -64,8 +63,6 @@ class NotificationController extends Controller
             'target_role'     => $request->target_role,
         ]);
 
-        broadcast(new NotificationCreated($notification))->toOthers();
-
         return response()->json([
             'message' => 'Notification created',
             'data'    => $notification
@@ -83,7 +80,7 @@ class NotificationController extends Controller
             return response()->json(['message' => 'Notification not required']);
         }
 
-        $notification = Notification::create([
+        Notification::create([
             'notifiable_type' => Article::class,
             'notifiable_id'   => $article->id,
             'actor_id'        => $article->user_id,
@@ -91,8 +88,6 @@ class NotificationController extends Controller
             'message'         => 'New contributor article pending approval',
             'target_role'     => 'admin',
         ]);
-
-        broadcast(new NotificationCreated($notification))->toOthers();
 
         return response()->json(['message' => 'Notification created'], 201);
     }
@@ -104,7 +99,7 @@ class NotificationController extends Controller
     {
         $subscription = Subscription::findOrFail($subscriptionId);
 
-        $notification = Notification::create([
+        Notification::create([
             'notifiable_type' => Subscription::class,
             'notifiable_id'   => $subscription->id,
             'actor_id'        => $subscription->user_id,
@@ -112,8 +107,6 @@ class NotificationController extends Controller
             'message'         => 'New subscription created',
             'target_role'     => 'admin',
         ]);
-
-        broadcast(new NotificationCreated($notification))->toOthers();
 
         return response()->json(['message' => 'Notification created'], 201);
     }
@@ -129,7 +122,7 @@ class NotificationController extends Controller
             return response()->json(['message' => 'Notification not required']);
         }
 
-       $notification = Notification::create([
+        Notification::create([
             'notifiable_type' => User::class,
             'notifiable_id'   => $user->id,
             'actor_id'        => null,
@@ -137,8 +130,6 @@ class NotificationController extends Controller
             'message'         => 'New admin/editor account pending approval',
             'target_role'     => 'admin',
         ]);
-
-        broadcast(new NotificationCreated($notification))->toOthers();
 
         return response()->json(['message' => 'Notification created'], 201);
     }

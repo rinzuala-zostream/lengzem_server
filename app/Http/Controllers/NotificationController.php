@@ -11,34 +11,44 @@ use Illuminate\Http\Request;
 class NotificationController extends Controller
 {
     /**
-     * List notifications based on user role
-     * GET /notifications?user_id=1
+     * List notifications with last_updated filter
      */
     public function index(Request $request)
-{
-    $request->validate([
-        'role' => 'required|string|in:admin,editor,reader'
-    ]);
+    {
+        $request->validate([
+            'role' => 'required|string|in:admin,editor,reader',
+            'last_updated' => 'nullable|date' // Add this
+        ]);
 
-    $role = $request->role;
+        $role = $request->role;
 
-    if (!in_array($role, ['admin', 'editor'])) {
+        if (!in_array($role, ['admin', 'editor'])) {
+            return response()->json([
+                'data' => [],
+                'message' => 'No notifications for this role'
+            ]);
+        }
+
+        $query = Notification::query()
+            ->where('target_role', $role)
+            ->latest();
+
+        // Add this: Only fetch notifications updated after last_updated
+        if ($request->last_updated) {
+            $query->where('updated_at', '>', $request->last_updated);
+        }
+
+        $notifications = $query
+            ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            ->when($request->boolean('unread'), fn ($q) => $q->where('is_read', false))
+            ->with(['actor', 'notifiable'])
+            ->paginate(15);
+
         return response()->json([
-            'data' => [],
-            'message' => 'No notifications for this role'
+            'data' => $notifications,
+            'last_updated' => now()->toISOString() // Add server timestamp
         ]);
     }
-
-    $notifications = Notification::query()
-        ->where('target_role', $role)
-        ->when($request->status, fn ($q) => $q->where('status', $request->status))
-        ->when($request->boolean('unread'), fn ($q) => $q->where('is_read', false))
-        ->latest()
-        ->with(['actor', 'notifiable'])
-        ->paginate(15);
-
-    return response()->json($notifications);
-}
 
     /**
      * Store notification manually

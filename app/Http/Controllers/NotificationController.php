@@ -170,10 +170,6 @@ class NotificationController extends Controller
     public function reject(Request $request, $id)
     {
 
-        if ($admin->role !== 'admin') {
-            return response()->json(['message' => 'Only admin can reject'], 403);
-        }
-
         Notification::findOrFail($id)->update([
             'status'  => 'rejected',
             'is_read' => true

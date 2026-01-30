@@ -568,7 +568,7 @@ class AdminUIController extends Controller
     public function articleAddRes()
 {
     // Users with role admin OR editor
-    $users = User::whereIn('role', ['admin', 'editor'])->get();
+    $users = User::whereIn('role', ['admin', 'editor'])->where('isApproved', true)->get();
 
     // All categories
     $categories = Category::all();

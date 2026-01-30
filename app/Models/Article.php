@@ -13,6 +13,7 @@ class Article extends Model
         'author_id',
         'isContributor',
         'contributor',
+        'contact',
         'category_id',
         'title',
         'slug',

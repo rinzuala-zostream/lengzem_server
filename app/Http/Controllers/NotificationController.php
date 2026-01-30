@@ -186,4 +186,14 @@ class NotificationController extends Controller
 
         return response()->json(['message' => 'Marked as read']);
     }
+
+    /**
+     * Delete notification
+     */
+    public function destroy($id)
+    {
+        Notification::findOrFail($id)->delete();
+
+        return response()->json(['message' => 'Notification deleted']);
+    }
 }

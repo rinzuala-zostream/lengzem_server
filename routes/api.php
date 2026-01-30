@@ -182,4 +182,5 @@ Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/{id}/approve', [NotificationController::class, 'approve']);
     Route::post('/notifications/{id}/reject', [NotificationController::class, 'reject']);
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 

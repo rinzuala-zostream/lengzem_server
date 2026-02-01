@@ -198,7 +198,7 @@ public function getEditors()
 {
     try {
         $editors = User::withCount('articles')
-            ->whereIn('role', ['editor', 'admin'])
+            ->whereIn('role', ['editor', 'admin'])->where('isApproved', true)
             ->orderBy('role') // Optional: order by role first
             ->orderBy('created_at', 'desc') // Optional: order by creation date
             ->paginate(100);

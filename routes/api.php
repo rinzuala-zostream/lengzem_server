@@ -184,3 +184,6 @@ Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 
+//this is for public routes, dont need auth middleware
+Route::post('/article/public-post', [ArticleController::class, 'publicStore']);
+

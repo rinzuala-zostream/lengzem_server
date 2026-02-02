@@ -280,7 +280,7 @@ class ArticleController extends Controller
                 'content' => 'sometimes|string',
                 'author_id' => 'nullable|exists:user,id',
                 'isContributor' => 'nullable|boolean',
-                'contributor' => 'nullable|exists:user,id',
+                'contributor' => 'nullable|string',
                 'contact' => 'nullable|string|max:50',
                 'category_id' => 'nullable|exists:categories,id',
                 'slug' => 'nullable|string|max:255|unique:articles,slug',

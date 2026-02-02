@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\RedeemCode;
 use App\Models\Subscription;
 use App\Models\videoModel;
+use App\Models\User;
 use Http;
 use Illuminate\Http\Request;
 

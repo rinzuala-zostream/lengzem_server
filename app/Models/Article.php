@@ -32,6 +32,14 @@ class Article extends Model
 
     protected $dates = ['published_at'];
 
+    protected $casts = [
+        'isContributor' => 'boolean',
+        'isApproved' => 'boolean',
+        'isCommentable' => 'boolean',
+        'isPremium' => 'boolean',
+        'isNotify' => 'boolean',
+    ];
+
     /* =======================
      | Relationships
      ======================= */

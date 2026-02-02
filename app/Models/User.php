@@ -30,6 +30,10 @@ class User extends Authenticatable
         'token',
     ];
 
+    protected $casts = [
+        'isApproved' => 'boolean',
+    ];
+
     public function articles()
 {
     return $this->hasMany(Article::class, 'author_id', 'id');

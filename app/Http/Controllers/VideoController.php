@@ -54,7 +54,7 @@ class VideoController extends Controller
             if (!$userId) {
                 return response()->json([
                     'status' => false,
-                    'message' => $e->getMessage(),
+                    'message' => 'Please log in to access premium content.',
                 ], 401);
             }
 

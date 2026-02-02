@@ -50,6 +50,12 @@ class Article extends Model
         return $this->belongsTo(User::class, 'author_id');
     }
 
+    //Cover images associated with the article
+    public function coverImage()
+{
+    return $this->belongsTo(CoverImage::class, 'cover_image_id');
+}
+
     // Contributor of the article (nullable FK)
     public function contributorUser()
     {

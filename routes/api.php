@@ -184,6 +184,15 @@ Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 
+//Cover Image Public Route
+Route::prefix('cover-image')->group(function () {
+    Route::get('/', [CoverImageController::class, 'index']);
+    Route::post('/', [CoverImageController::class, 'store']);
+    Route::put('{id}', [CoverImageController::class, 'update']);
+    Route::delete('{id}', [CoverImageController::class, 'destroy']);
+    Route::get('search', [CoverImageController::class, 'search']);
+});
+
 //this is for public routes, dont need auth middleware
 Route::post('/article/public-post', [ArticleController::class, 'publicStore']);
 

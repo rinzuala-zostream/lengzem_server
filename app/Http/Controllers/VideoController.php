@@ -33,64 +33,73 @@ class VideoController extends Controller
         }
     }
 
-    // Show a single video
     public function show(Request $request, $id)
-    {
-        try {
-            $userId = $request->query('uid');
-            $video = videoModel::published()->findOrFail($id);
+{
+    try {
+        $userId = $request->query('uid');
+        $video = videoModel::published()->findOrFail($id);
 
-            if ($video->is_premium) {
-                if (!$userId) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Please log in to access premium content.',
-                    ], 401);
-                }
+        // 🔐 Fetch user if logged in
+        $user = null;
+        if ($userId) {
+            $user = User::find($userId);
+        }
 
-                $activeSubscription = Subscription::where('user_id', $userId)
-                    ->where('status', 'active')
-                    ->latest('id')
+        // 🎯 Skip subscription check for admin/editor
+        $isPrivilegedUser = $user && in_array($user->role, ['admin', 'editor']);
+
+        if ($video->is_premium && !$isPrivilegedUser) {
+
+            if (!$userId) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Please log in to access premium content.',
+                ], 401);
+            }
+
+            $activeSubscription = Subscription::where('user_id', $userId)
+                ->where('status', 'active')
+                ->latest('id')
+                ->first();
+
+            // 🪄 Check redeem benefit if no subscription
+            if (!$activeSubscription) {
+                $activeRedeem = RedeemCode::where('user_id', $userId)
+                    ->where('is_active', true)
+                    ->whereDate('benefit_end_month', '>=', now())
+                    ->where(function ($query) {
+                        $query->whereNull('expire_date')
+                            ->orWhere('expire_date', '>=', now());
+                    })
                     ->first();
 
-                // 🪄 If no subscription, check redeem benefit
-                if (!$activeSubscription) {
-                    $activeRedeem = RedeemCode::where('user_id', $userId)
-                        ->where('is_active', true)
-                        ->whereDate('benefit_end_month', '>=', now())
-                        ->where(function ($query) {
-                            $query->whereNull('expire_date')
-                                ->orWhere('expire_date', '>=', now());
-                        })
-                        ->first();
-
-                    // Treat redeem benefit as an active subscription
-                    if ($activeRedeem) {
-                        $activeSubscription = true;
-                    }
-                }
-
-                if (!$activeSubscription) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'He content en tur chuan subscription i neih a ngai, Lengzem i subscribe dawm em?.',
-                    ], 403);
+                if ($activeRedeem) {
+                    $activeSubscription = true;
                 }
             }
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Video retrieved successfully.',
-                'data' => $video
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Failed to retrieve video.',
-                'error' => $e->getMessage()
-            ], 500);
+            if (!$activeSubscription) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'He content en tur chuan subscription i neih a ngai, Lengzem i subscribe dawm em?.',
+                ], 403);
+            }
         }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Video retrieved successfully.',
+            'data' => $video
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Failed to retrieve video.',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     // Create new video
     public function store(Request $request)

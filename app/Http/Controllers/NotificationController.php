@@ -96,7 +96,7 @@ class NotificationController extends Controller
     'actor_id'        => $article->user_id,
     'action'          => 'article_created',
     'message'         => 'New contributor article pending approval',
-    'target_roles'    => ['admin', 'editor'],
+    'target_role'    => ['admin', 'editor'],
 ]);
 
         return response()->json(['message' => 'Notification created'], 201);

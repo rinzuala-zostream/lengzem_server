@@ -417,6 +417,7 @@ class ArticleController extends Controller
                 'actor_id'        => auth()->id(),
                 'action'          => 'article_created',
                 'message'         => 'New contributor article pending approval',
+                'target_role'     => ['admin', 'editor'],
                 'status'          => 'pending',
             ]);
         }

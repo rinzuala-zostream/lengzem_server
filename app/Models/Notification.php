@@ -24,6 +24,7 @@ class Notification extends Model
 
     protected $casts = [
         'is_read' => 'boolean',
+        'target_role' => 'array',
     ];
 
     /**

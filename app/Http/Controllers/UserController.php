@@ -116,7 +116,7 @@ public function store(Request $request)
                 'actor_id'        => auth()->id(), // who created this user (if logged in)
                 'action'          => 'user_created',
                 'message'         => "New {$user->role} account pending approval",
-                'target_role'     => 'admin',
+                'target_role'     => ['admin'],
                 'status'          => 'pending',
             ]);
         }

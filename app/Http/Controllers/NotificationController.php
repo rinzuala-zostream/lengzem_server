@@ -91,13 +91,13 @@ class NotificationController extends Controller
         }
 
         Notification::create([
-            'notifiable_type' => Article::class,
-            'notifiable_id'   => $article->id,
-            'actor_id'        => $article->user_id,
-            'action'          => 'article_created',
-            'message'         => 'New contributor article pending approval',
-            'target_role'     => 'admin',
-        ]);
+    'notifiable_type' => Article::class,
+    'notifiable_id'   => $article->id,
+    'actor_id'        => $article->user_id,
+    'action'          => 'article_created',
+    'message'         => 'New contributor article pending approval',
+    'target_roles'    => ['admin', 'editor'],
+]);
 
         return response()->json(['message' => 'Notification created'], 201);
     }

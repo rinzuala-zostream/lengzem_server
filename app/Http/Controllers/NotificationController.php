@@ -16,7 +16,7 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $request->validate([
-            'role' => 'required|string|in:admin,editor,reader',
+            'role' => 'required|string|in:admin,editor',
             'last_updated' => 'nullable|date' // Add this
         ]);
 
@@ -30,7 +30,7 @@ class NotificationController extends Controller
         }
 
         $query = Notification::query()
-            ->where('target_role', $role)
+            ->whereJsonContains('target_role', $role)
             ->latest();
 
         // Add this: Only fetch notifications updated after last_updated

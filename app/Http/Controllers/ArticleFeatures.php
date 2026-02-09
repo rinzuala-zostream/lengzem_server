@@ -35,7 +35,7 @@ class ArticleFeatures extends Controller
             }
 
             $features = $query
-                ->orderByRaw("STR_TO_DATE(month_year, '%Y-%m') DESC")
+                ->orderByRaw("STR_TO_DATE(CONCAT(month_year, '-01'), '%Y-%m-%d') DESC")
                 ->paginate($perPage);
 
             return response()->json([

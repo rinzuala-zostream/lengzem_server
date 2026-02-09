@@ -45,6 +45,10 @@ class HomeController extends Controller
             ->orderByDesc('published_at')
             ->limit(20)
             ->get();
+
+        /*$newlyPublished = ArticleFeatureModel::orderByRaw("STR_TO_DATE(month_year, '%Y-%m') DESC")
+            ->paginate(12);*/
+
         $shownArticleIds->push(...$newlyPublished->pluck('id'));
 
         // Most Liked
@@ -125,8 +129,8 @@ class HomeController extends Controller
             'Recommended for You' => ArticleResource::collection($recommended),
             'Most Liked' => ArticleResource::collection($mostLiked),
             'From Authors You Read' => ArticleResource::collection($fromAuthors),
-            'Editor\'s Picks' => ArticleResource::collection($editorsPicks),         
-        
+            'Editor\'s Picks' => ArticleResource::collection($editorsPicks),
+
         ];
 
         return response()->json(

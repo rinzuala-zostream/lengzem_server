@@ -577,7 +577,9 @@ class AdminUIController extends Controller
         // All tags
         $tags = Tag::all();
 
-        $articles_features = ArticleFeatureModel::all();
+        $articles_features = ArticleFeatureModel::
+            orderByRaw("STR_TO_DATE(CONCAT(month_year, '-01'), '%Y-%m-%d') DESC")
+            ->limit(12);
 
         return response()->json([
             'users' => $users,

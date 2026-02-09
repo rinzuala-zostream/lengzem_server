@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\AdController;
 use App\Http\Controllers\AdTypeController;
+use App\Http\Controllers\ArticleFeatures;
 use App\Http\Controllers\ArticleReadTimeController;
 use App\Http\Controllers\ArticleTagController;
 use App\Http\Controllers\AudioController;
 use App\Http\Controllers\CheckPendingPayment;
+use App\Http\Controllers\CoverImageController;
 use App\Http\Controllers\FCMNotificationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
@@ -195,4 +197,11 @@ Route::prefix('cover-image')->group(function () {
 
 //this is for public routes, dont need auth middleware
 Route::post('/article/public-post', [ArticleController::class, 'publicStore']);
+
+//Article Feature routes
+Route::get('/article-features', [ArticleFeatures::class, 'index']);
+Route::post('/article-features', [ArticleFeatures::class, 'store']);
+Route::get('/article-features/{id}', [ArticleFeatures::class, 'show']);
+Route::put('/article-features/{id}', [ArticleFeatures::class, 'update']);
+Route::delete('/article-features/{id}', [ArticleFeatures::class, 'destroy']);
 

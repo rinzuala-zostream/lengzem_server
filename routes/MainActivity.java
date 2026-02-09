@@ -1,17 +1,15 @@
 public class MainActivity {
     public static void main(String[] args) {
 
-        String a = "10";
-        String b = "10";
-        boolean booleanValue = false;
+        int a = 1;
+        int b = 19;
+        String d;
+
+       d = String.valueOf(a) + String.valueOf(b);
+
         
-        if (booleanValue) {
-             System.out.println("a is less than b");  
-        }
-        else {
-             System.out.println("a is not less than b");  
-        }
-       
+        
+        System.out.println(d);
         
     }
 }

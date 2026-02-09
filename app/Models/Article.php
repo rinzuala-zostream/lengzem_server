@@ -26,6 +26,7 @@ class Article extends Model
         'isPremium',
         'cover_image_url',
         'summary',
+        'article_feature_id',
         'published_at',
         'isNotify',
     ];

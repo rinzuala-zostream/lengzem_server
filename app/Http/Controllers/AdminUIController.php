@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ArticleFeatureModel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -29,24 +30,24 @@ class AdminUIController extends Controller
             $data = Cache::remember('admin_dashboard_stats', now()->addMinutes(5), function () {
                 // Basic counts
                 $basicStats = [
-                    'users'         => User::count(),
+                    'users' => User::count(),
                     'subscriptions' => Subscription::count(),
-                    'comments'      => Comment::count(),
-                    'videos'        => Video::count(),
-                    'audios'        => AudioModel::count(),
-                    'articles'      => Article::count(),
-                    'categories'    => Category::count(),
+                    'comments' => Comment::count(),
+                    'videos' => Video::count(),
+                    'audios' => AudioModel::count(),
+                    'articles' => Article::count(),
+                    'categories' => Category::count(),
                 ];
 
                 // User growth statistics (last 30 days)
                 $userGrowth = $this->getUserGrowthStats();
-                
+
                 // Revenue statistics
                 $revenueStats = $this->getRevenueStats();
-                
+
                 // New users in last 7 days
                 $newUsersThisWeek = User::where('created_at', '>=', Carbon::now()->subDays(7))->count();
-                
+
                 // Active users (users with some activity - has articles or comments)
                 $activeUsers = User::where('created_at', '>=', Carbon::now()->subDays(30))->count();
 
@@ -63,19 +64,19 @@ class AdminUIController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data'   => $data,
+                'data' => $data,
             ], 200);
 
         } catch (\Throwable $e) {
             // Log the actual error for debugging
             Log::error('Admin dashboard stats failed', [
                 'error' => $e->getMessage(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
 
             return response()->json([
-                'status'  => false,
+                'status' => false,
                 'message' => $e->getMessage(),
             ], 500);
         }
@@ -88,25 +89,25 @@ class AdminUIController extends Controller
     {
         $today = Carbon::today();
         $lastMonth = Carbon::today()->subDays(30);
-        
+
         // Users created today
         $usersToday = User::whereDate('created_at', $today)->count();
-        
+
         // Users created yesterday
         $usersYesterday = User::whereDate('created_at', $today->copy()->subDay())->count();
-        
+
         // Users created this week
         $usersThisWeek = User::where('created_at', '>=', $today->copy()->startOfWeek())->count();
-        
+
         // Users created last week
         $usersLastWeek = User::whereBetween('created_at', [
             $today->copy()->subWeek()->startOfWeek(),
             $today->copy()->subWeek()->endOfWeek()
         ])->count();
-        
+
         // Users created this month
         $usersThisMonth = User::where('created_at', '>=', $today->copy()->startOfMonth())->count();
-        
+
         // Users created last month
         $usersLastMonth = User::whereBetween('created_at', [
             $today->copy()->subMonth()->startOfMonth(),
@@ -114,12 +115,12 @@ class AdminUIController extends Controller
         ])->count();
 
         // Calculate growth percentages
-        $weekGrowth = $usersLastWeek > 0 
-            ? (($usersThisWeek - $usersLastWeek) / $usersLastWeek) * 100 
+        $weekGrowth = $usersLastWeek > 0
+            ? (($usersThisWeek - $usersLastWeek) / $usersLastWeek) * 100
             : ($usersThisWeek > 0 ? 100 : 0);
-        
-        $monthGrowth = $usersLastMonth > 0 
-            ? (($usersThisMonth - $usersLastMonth) / $usersLastMonth) * 100 
+
+        $monthGrowth = $usersLastMonth > 0
+            ? (($usersThisMonth - $usersLastMonth) / $usersLastMonth) * 100
             : ($usersThisMonth > 0 ? 100 : 0);
 
         return [
@@ -131,8 +132,8 @@ class AdminUIController extends Controller
             'last_month' => $usersLastMonth,
             'week_growth_percentage' => round($weekGrowth, 1),
             'month_growth_percentage' => round($monthGrowth, 1),
-            'daily_growth_percentage' => $usersYesterday > 0 
-                ? round((($usersToday - $usersYesterday) / $usersYesterday) * 100, 1) 
+            'daily_growth_percentage' => $usersYesterday > 0
+                ? round((($usersToday - $usersYesterday) / $usersYesterday) * 100, 1)
                 : ($usersToday > 0 ? 100 : 0),
         ];
     }
@@ -141,93 +142,93 @@ class AdminUIController extends Controller
      * Get revenue statistics
      */
     private function getRevenueStats(): array
-{
-    $today = Carbon::today();
+    {
+        $today = Carbon::today();
 
-    // Base query for active subscriptions
-    $activeSubscriptions = Subscription::where('status', 'active');
+        // Base query for active subscriptions
+        $activeSubscriptions = Subscription::where('status', 'active');
 
-    // Today's revenue
-    $revenueToday = (clone $activeSubscriptions)
-        ->whereDate('start_date', $today)
-        ->sum('amount');
+        // Today's revenue
+        $revenueToday = (clone $activeSubscriptions)
+            ->whereDate('start_date', $today)
+            ->sum('amount');
 
-    // Yesterday's revenue
-    $revenueYesterday = (clone $activeSubscriptions)
-        ->whereDate('start_date', $today->copy()->subDay())
-        ->sum('amount');
+        // Yesterday's revenue
+        $revenueYesterday = (clone $activeSubscriptions)
+            ->whereDate('start_date', $today->copy()->subDay())
+            ->sum('amount');
 
-    // This week's revenue
-    $revenueThisWeek = (clone $activeSubscriptions)
-        ->where('start_date', '>=', $today->copy()->startOfWeek())
-        ->sum('amount');
+        // This week's revenue
+        $revenueThisWeek = (clone $activeSubscriptions)
+            ->where('start_date', '>=', $today->copy()->startOfWeek())
+            ->sum('amount');
 
-    // Last week's revenue
-    $revenueLastWeek = (clone $activeSubscriptions)
-        ->whereBetween('start_date', [
-            $today->copy()->subWeek()->startOfWeek(),
-            $today->copy()->subWeek()->endOfWeek()
-        ])
-        ->sum('amount');
+        // Last week's revenue
+        $revenueLastWeek = (clone $activeSubscriptions)
+            ->whereBetween('start_date', [
+                $today->copy()->subWeek()->startOfWeek(),
+                $today->copy()->subWeek()->endOfWeek()
+            ])
+            ->sum('amount');
 
-    // This month's revenue
-    $revenueThisMonth = (clone $activeSubscriptions)
-        ->where('start_date', '>=', $today->copy()->startOfMonth())
-        ->sum('amount');
+        // This month's revenue
+        $revenueThisMonth = (clone $activeSubscriptions)
+            ->where('start_date', '>=', $today->copy()->startOfMonth())
+            ->sum('amount');
 
-    // Last month's revenue
-    $revenueLastMonth = (clone $activeSubscriptions)
-        ->whereBetween('start_date', [
-            $today->copy()->subMonth()->startOfMonth(),
-            $today->copy()->subMonth()->endOfMonth()
-        ])
-        ->sum('amount');
+        // Last month's revenue
+        $revenueLastMonth = (clone $activeSubscriptions)
+            ->whereBetween('start_date', [
+                $today->copy()->subMonth()->startOfMonth(),
+                $today->copy()->subMonth()->endOfMonth()
+            ])
+            ->sum('amount');
 
-    // This year's revenue
-    $revenueThisYear = (clone $activeSubscriptions)
-        ->where('start_date', '>=', $today->copy()->startOfYear())
-        ->sum('amount');
+        // This year's revenue
+        $revenueThisYear = (clone $activeSubscriptions)
+            ->where('start_date', '>=', $today->copy()->startOfYear())
+            ->sum('amount');
 
-    // Total revenue (all time)
-    $revenueTotal = (clone $activeSubscriptions)->sum('amount');
+        // Total revenue (all time)
+        $revenueTotal = (clone $activeSubscriptions)->sum('amount');
 
-    // Growth calculations
-    $dailyGrowth = $revenueYesterday > 0
-        ? (($revenueToday - $revenueYesterday) / $revenueYesterday) * 100
-        : ($revenueToday > 0 ? 100 : 0);
+        // Growth calculations
+        $dailyGrowth = $revenueYesterday > 0
+            ? (($revenueToday - $revenueYesterday) / $revenueYesterday) * 100
+            : ($revenueToday > 0 ? 100 : 0);
 
-    $weekGrowth = $revenueLastWeek > 0
-        ? (($revenueThisWeek - $revenueLastWeek) / $revenueLastWeek) * 100
-        : ($revenueThisWeek > 0 ? 100 : 0);
+        $weekGrowth = $revenueLastWeek > 0
+            ? (($revenueThisWeek - $revenueLastWeek) / $revenueLastWeek) * 100
+            : ($revenueThisWeek > 0 ? 100 : 0);
 
-    $monthGrowth = $revenueLastMonth > 0
-        ? (($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100
-        : ($revenueThisMonth > 0 ? 100 : 0);
+        $monthGrowth = $revenueLastMonth > 0
+            ? (($revenueThisMonth - $revenueLastMonth) / $revenueLastMonth) * 100
+            : ($revenueThisMonth > 0 ? 100 : 0);
 
-    return [
-        'today' => (float) $revenueToday,
-        'yesterday' => (float) $revenueYesterday,
-        'this_week' => (float) $revenueThisWeek,
-        'last_week' => (float) $revenueLastWeek,
-        'this_month' => (float) $revenueThisMonth,
-        'last_month' => (float) $revenueLastMonth,
-        'this_year' => (float) $revenueThisYear,
-        'total' => (float) $revenueTotal,
-        'daily_growth_percentage' => round($dailyGrowth, 1),
-        'weekly_growth_percentage' => round($weekGrowth, 1),
-        'monthly_growth_percentage' => round($monthGrowth, 1),
-        'formatted' => [
-            'today' => '₹' . number_format($revenueToday, 2),
-            'yesterday' => '₹' . number_format($revenueYesterday, 2),
-            'this_week' => '₹' . number_format($revenueThisWeek, 2),
-            'last_week' => '₹' . number_format($revenueLastWeek, 2),
-            'this_month' => '₹' . number_format($revenueThisMonth, 2),
-            'last_month' => '₹' . number_format($revenueLastMonth, 2),
-            'this_year' => '₹' . number_format($revenueThisYear, 2),
-            'total' => '₹' . number_format($revenueTotal, 2),
-        ]
-    ];
-}
+        return [
+            'today' => (float) $revenueToday,
+            'yesterday' => (float) $revenueYesterday,
+            'this_week' => (float) $revenueThisWeek,
+            'last_week' => (float) $revenueLastWeek,
+            'this_month' => (float) $revenueThisMonth,
+            'last_month' => (float) $revenueLastMonth,
+            'this_year' => (float) $revenueThisYear,
+            'total' => (float) $revenueTotal,
+            'daily_growth_percentage' => round($dailyGrowth, 1),
+            'weekly_growth_percentage' => round($weekGrowth, 1),
+            'monthly_growth_percentage' => round($monthGrowth, 1),
+            'formatted' => [
+                'today' => '₹' . number_format($revenueToday, 2),
+                'yesterday' => '₹' . number_format($revenueYesterday, 2),
+                'this_week' => '₹' . number_format($revenueThisWeek, 2),
+                'last_week' => '₹' . number_format($revenueLastWeek, 2),
+                'this_month' => '₹' . number_format($revenueThisMonth, 2),
+                'last_month' => '₹' . number_format($revenueLastMonth, 2),
+                'this_year' => '₹' . number_format($revenueThisYear, 2),
+                'total' => '₹' . number_format($revenueTotal, 2),
+            ]
+        ];
+    }
 
     /**
      * Get users per day for the last N days
@@ -236,22 +237,22 @@ class AdminUIController extends Controller
     {
         $startDate = Carbon::now()->subDays($days)->startOfDay();
         $endDate = Carbon::now()->endOfDay();
-        
+
         // Get daily user counts
         $dailyUsers = User::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('COUNT(*) as count')
         )
-        ->whereBetween('created_at', [$startDate, $endDate])
-        ->groupBy('date')
-        ->orderBy('date', 'asc')
-        ->get()
-        ->keyBy('date');
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get()
+            ->keyBy('date');
 
         // Fill in missing dates with 0
         $result = [];
         $currentDate = $startDate->copy();
-        
+
         while ($currentDate <= $endDate) {
             $dateString = $currentDate->toDateString();
             $result[] = [
@@ -273,23 +274,23 @@ class AdminUIController extends Controller
     {
         $startDate = Carbon::now()->subDays($days)->startOfDay();
         $endDate = Carbon::now()->endOfDay();
-        
+
         // Get daily revenue
         $dailyRevenue = Subscription::select(
             DB::raw('DATE(start_date) as date'),
             DB::raw('SUM(amount) as amount')
         )
-        ->whereBetween('start_date', [$startDate, $endDate])
-        ->whereNotNull('amount')
-        ->groupBy('date')
-        ->orderBy('date', 'asc')
-        ->get()
-        ->keyBy('date');
+            ->whereBetween('start_date', [$startDate, $endDate])
+            ->whereNotNull('amount')
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get()
+            ->keyBy('date');
 
         // Fill in missing dates with 0
         $result = [];
         $currentDate = $startDate->copy();
-        
+
         while ($currentDate <= $endDate) {
             $dateString = $currentDate->toDateString();
             $result[] = [
@@ -313,7 +314,7 @@ class AdminUIController extends Controller
         try {
             $data = Cache::remember('admin_user_stats', now()->addMinutes(5), function () {
                 $days = request()->get('days', 30); // Default to 30 days
-                
+
                 return [
                     'users_per_day' => $this->getUsersPerDay($days),
                     'total_users' => User::count(),
@@ -359,7 +360,7 @@ class AdminUIController extends Controller
         try {
             $data = Cache::remember('admin_revenue_stats', now()->addMinutes(5), function () {
                 $days = request()->get('days', 30); // Default to 30 days
-                
+
                 return [
                     'revenue_per_day' => $this->getRevenuePerDay($days),
                     'revenue_stats' => $this->getRevenueStats(),
@@ -403,13 +404,13 @@ class AdminUIController extends Controller
     {
         $totalUsers = User::count();
         $totalRevenue = Subscription::sum('amount');
-        
+
         if ($totalUsers > 0) {
             $average = $totalRevenue / $totalUsers;
         } else {
             $average = 0;
         }
-        
+
         // Average revenue per paying user
         $payingUsers = Subscription::distinct('user_id')->count('user_id');
         if ($payingUsers > 0) {
@@ -417,7 +418,7 @@ class AdminUIController extends Controller
         } else {
             $averagePerPayingUser = 0;
         }
-        
+
         return [
             'all_users' => floatval($average),
             'paying_users' => floatval($averagePerPayingUser),
@@ -441,23 +442,23 @@ class AdminUIController extends Controller
             DB::raw('SUM(amount) as total_revenue'),
             DB::raw('AVG(amount) as average_amount')
         )
-        ->with('plan')
-        ->groupBy('subscription_plan_id')
-        ->orderBy('total_revenue', 'desc')
-        ->limit($limit)
-        ->get()
-        ->map(function ($subscription) {
-            return [
-                'plan_id' => $subscription->subscription_plan_id,
-                'plan_name' => $subscription->plan ? $subscription->plan->name : 'Unknown Plan',
-                'subscription_count' => $subscription->subscription_count,
-                'total_revenue' => floatval($subscription->total_revenue),
-                'average_amount' => floatval($subscription->average_amount),
-                'formatted_total_revenue' => '₹' . number_format($subscription->total_revenue, 2),
-                'formatted_average_amount' => '₹' . number_format($subscription->average_amount, 2),
-            ];
-        })
-        ->toArray();
+            ->with('plan')
+            ->groupBy('subscription_plan_id')
+            ->orderBy('total_revenue', 'desc')
+            ->limit($limit)
+            ->get()
+            ->map(function ($subscription) {
+                return [
+                    'plan_id' => $subscription->subscription_plan_id,
+                    'plan_name' => $subscription->plan ? $subscription->plan->name : 'Unknown Plan',
+                    'subscription_count' => $subscription->subscription_count,
+                    'total_revenue' => floatval($subscription->total_revenue),
+                    'average_amount' => floatval($subscription->average_amount),
+                    'formatted_total_revenue' => '₹' . number_format($subscription->total_revenue, 2),
+                    'formatted_average_amount' => '₹' . number_format($subscription->average_amount, 2),
+                ];
+            })
+            ->toArray();
     }
 
     /**
@@ -490,29 +491,29 @@ class AdminUIController extends Controller
                         $limit = 5;
                         break;
                 }
-                
+
                 $revenueBreakdown = Subscription::select(
                     $groupBy . ' as period',
                     DB::raw('SUM(amount) as total_revenue'),
                     DB::raw('COUNT(*) as subscription_count')
                 )
-                ->whereNotNull('amount')
-                ->groupBy('period')
-                ->orderBy('period', 'desc')
-                ->limit($limit)
-                ->get()
-                ->map(function ($item) use ($format, $period) {
-                    $periodLabel = $this->formatPeriod($item->period, $period);
-                    return [
-                        'period' => $periodLabel,
-                        'total_revenue' => floatval($item->total_revenue),
-                        'subscription_count' => $item->subscription_count,
-                        'formatted_total_revenue' => '₹' . number_format($item->total_revenue, 2),
-                        'average_revenue' => $item->subscription_count > 0 ? floatval($item->total_revenue / $item->subscription_count) : 0,
-                    ];
-                })
-                ->values()
-                ->toArray();
+                    ->whereNotNull('amount')
+                    ->groupBy('period')
+                    ->orderBy('period', 'desc')
+                    ->limit($limit)
+                    ->get()
+                    ->map(function ($item) use ($format, $period) {
+                        $periodLabel = $this->formatPeriod($item->period, $period);
+                        return [
+                            'period' => $periodLabel,
+                            'total_revenue' => floatval($item->total_revenue),
+                            'subscription_count' => $item->subscription_count,
+                            'formatted_total_revenue' => '₹' . number_format($item->total_revenue, 2),
+                            'average_revenue' => $item->subscription_count > 0 ? floatval($item->total_revenue / $item->subscription_count) : 0,
+                        ];
+                    })
+                    ->values()
+                    ->toArray();
 
                 return [
                     'breakdown' => $revenueBreakdown,
@@ -566,20 +567,24 @@ class AdminUIController extends Controller
      * Article add na mi tur
      */
     public function articleAddRes()
-{
-    // Users with role admin OR editor
-    $users = User::whereIn('role', ['admin', 'editor'])->where('isApproved', true)->get();
+    {
+        // Users with role admin OR editor
+        $users = User::whereIn('role', ['admin', 'editor'])->where('isApproved', true)->get();
 
-    // All categories
-    $categories = Category::all();
+        // All categories
+        $categories = Category::all();
 
-    // All tags
-    $tags = Tag::all();
+        // All tags
+        $tags = Tag::all();
 
-    return response()->json([
-        'users' => $users,
-        'categories' => $categories,
-        'tags' => $tags,
-    ]);
-}
+        $articles_features = ArticleFeatureModel::all();
+
+        return response()->json([
+            'users' => $users,
+            'categories' => $categories,
+            'tags' => $tags,
+            'articles_features' => $articles_features,
+
+        ]);
+    }
 }

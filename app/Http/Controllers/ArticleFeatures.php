@@ -34,7 +34,9 @@ class ArticleFeatures extends Controller
                 $query->where('month_year', 'like', "%{$monthYear}%");
             }
 
-            $features = $query->orderBy('id', 'desc')->paginate($perPage);
+            $features = $query
+                ->orderByRaw("STR_TO_DATE(month_year, '%Y-%m') DESC")
+                ->paginate($perPage);
 
             return response()->json([
                 'success' => true,

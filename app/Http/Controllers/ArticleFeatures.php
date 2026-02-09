@@ -12,15 +12,40 @@ class ArticleFeatures extends Controller
     /**
      * Display a listing of the article features.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $features = ArticleFeatureModel::orderBy('month_year', 'desc')->get();
+            $search = $request->query('search');
+            $monthYear = $request->query('month_year');
+            $perPage = $request->query('per_page', 12);
+
+            $query = ArticleFeatureModel::query();
+
+            // 🔍 Search by title or description
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+
+            // 📅 Filter by string month_year
+            if ($monthYear) {
+                $query->where('month_year', 'like', "%{$monthYear}%");
+            }
+
+            $features = $query->orderBy('id', 'desc')->paginate($perPage);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Article features fetched successfully.',
-                'data' => $features
+                'pagination' => [
+                    'current_page' => $features->currentPage(),
+                    'last_page' => $features->lastPage(),
+                    'per_page' => $features->perPage(),
+                    'total' => $features->total(),
+                ],
+                'data' => $features->items()
             ], 200);
 
         } catch (Exception $e) {

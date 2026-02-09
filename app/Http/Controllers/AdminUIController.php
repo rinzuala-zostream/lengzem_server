@@ -579,7 +579,8 @@ class AdminUIController extends Controller
 
         $articles_features = ArticleFeatureModel::
             orderByRaw("STR_TO_DATE(CONCAT(month_year, '-01'), '%Y-%m-%d') DESC")
-            ->limit(12);
+            ->limit(12)
+            ->get();
 
         return response()->json([
             'users' => $users,

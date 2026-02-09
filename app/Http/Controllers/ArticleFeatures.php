@@ -39,7 +39,7 @@ class ArticleFeatures extends Controller
     {
         try {
             $request->validate([
-                'month_year' => 'required|date',
+                'month_year' => 'nullable|string|max:55',
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string|max:255',
                 'img_url' => 'nullable|string',
@@ -105,7 +105,7 @@ class ArticleFeatures extends Controller
             $feature = ArticleFeatureModel::findOrFail($id);
 
             $request->validate([
-                'month_year' => 'nullable|date',
+                'month_year' => 'nullable|string|max:55',
                 'title' => 'nullable|string|max:255',
                 'description' => 'nullable|string|max:255',
                 'img_url' => 'nullable|string',

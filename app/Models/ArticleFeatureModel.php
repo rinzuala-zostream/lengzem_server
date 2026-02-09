@@ -26,7 +26,4 @@ class ArticleFeatureModel extends Model
         'img_url',
         'created_at',
     ];
-
-    // Optionally, if you want Laravel to treat `month_year` as a Carbon date
-    protected $dates = ['month_year', 'created_at'];
 }

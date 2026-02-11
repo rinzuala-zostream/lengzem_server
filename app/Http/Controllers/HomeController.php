@@ -121,7 +121,7 @@ class HomeController extends Controller
         $newsNawi = Article::published()
             ->with(['author', 'category', 'tags'])
             ->whereHas('category', fn($q) => $q->where('name', 'News nawi leh tawi'))
-            ->with('isApproved', true)
+            ->where('isApproved', true)
             ->whereNotIn('id', $shownArticleIds)
             ->orderByDesc('published_at')
             ->limit(20)

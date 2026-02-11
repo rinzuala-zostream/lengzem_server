@@ -29,7 +29,7 @@ class ArticleController extends Controller
     {
         try {
             $query = Article::withCount('comments')
-            ->with('isAproved', true)
+            ->where('isApproved', true)
             ->with(['author', 'category', 'tags']);
 
             // Filtering by category or tag slug

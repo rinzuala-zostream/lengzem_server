@@ -21,7 +21,7 @@ class HomeController extends Controller
         $trending = Cache::remember('home_trending', 60, function () {
             return Article::published()
                 ->with(['author', 'category', 'tags'])
-                ->with('isApproved', true)
+                ->where('isApproved', true)
                 ->orderByDesc('view_count')
                 ->limit(20)
                 ->get();
@@ -32,7 +32,7 @@ class HomeController extends Controller
         $editorsPicks = Cache::remember('home_editors_picks', 60, function () use ($shownArticleIds) {
             return Article::published()
                 ->with(['author', 'category', 'tags'])
-                ->with('isApproved', true)
+                ->where('isApproved', true)
                 ->where('view_count', '>', 1000)
                 ->whereNotIn('id', $shownArticleIds)
                 ->orderByDesc('view_count')
@@ -44,7 +44,7 @@ class HomeController extends Controller
         // Newly Published
         $newlyPublished = Article::published()
             ->with(['author', 'category', 'tags'])
-            ->with('isApproved', true)
+            ->where('isApproved', true)
             ->orderByDesc('published_at')
             ->limit(20)
             ->get();
@@ -58,7 +58,7 @@ class HomeController extends Controller
         $mostLiked = Cache::remember('home_most_liked', 60, function () {
             return Article::published()
                 ->with(['author', 'category', 'tags'])
-                ->with('isApproved', true)
+                ->where('isApproved', true)
                 ->withCount([
                     'interactions as like_count' => fn($query) => $query->where('type', 'like')
                 ])
@@ -90,7 +90,7 @@ class HomeController extends Controller
             if ($likedTagIds->isNotEmpty()) {
                 $recommended = Article::published()
                     ->with(['author', 'category', 'tags'])
-                    ->with('isApproved', true)
+                    ->where('isApproved', true)
                     ->whereHas('tags', fn($q) => $q->whereIn('tags.id', $likedTagIds))
                     ->whereNotIn('id', $shownArticleIds)
                     ->orderByDesc('published_at')
@@ -107,7 +107,7 @@ class HomeController extends Controller
             if ($authorIds->isNotEmpty()) {
                 $fromAuthors = Article::published()
                     ->with(['author', 'category', 'tags'])
-                    ->with('isApproved', true)
+                    ->where('isApproved', true)
                     ->whereIn('author_id', $authorIds)
                     ->whereNotIn('id', $shownArticleIds)
                     ->orderByDesc('published_at')

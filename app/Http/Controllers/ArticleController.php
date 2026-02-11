@@ -36,7 +36,7 @@ class ArticleController extends Controller
             $message = 'Articles retrieved successfully.';
 
             // 🔍 Filter by category slug
-            if ($request->has('category')) {
+            if ($request->filled('category')) {
                 $categorySlug = Str::slug($request->category);
                 $query->whereHas('category', function ($q) use ($categorySlug) {
                     $q->where('slug', $categorySlug);

@@ -28,7 +28,9 @@ class ArticleController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Article::withCount('comments')->with(['author', 'category', 'tags']);
+            $query = Article::withCount('comments')
+            ->with('isAproved', true)
+            ->with(['author', 'category', 'tags']);
 
             // Filtering by category or tag slug
             if ($request->has('category')) {
@@ -244,8 +246,6 @@ class ArticleController extends Controller
                 }
             }
 
-            DB::commit();
-
             return response()->json([
                 'status' => true,
                 'message' => 'Article created successfully.',
@@ -450,8 +450,6 @@ class ArticleController extends Controller
                 }
             }
 
-            DB::commit();
-
             return response()->json([
                 'status' => true,
                 'message' => 'Article created successfully.',
@@ -467,7 +465,7 @@ class ArticleController extends Controller
             ], 422);
 
         } catch (\Throwable $e) {
-            DB::rollBack();
+           
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create article.',

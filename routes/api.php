@@ -67,6 +67,7 @@ Route::delete('/tags/{id}', [TagController::class, 'destroy']);
 //Article routes
 Route::get('/articles/search', [ArticleController::class, 'search']);
 Route::get('/articles', [ArticleController::class, 'index']);
+
 Route::middleware(['allow.origin'])->group(function () {
 Route::get('/articles/{id}', [ArticleController::class, 'show']);
 });

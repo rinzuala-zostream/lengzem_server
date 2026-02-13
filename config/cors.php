@@ -9,6 +9,7 @@ return [
     'allowed_origins' => [
         'https://app.lengzem.in',
         'https://lengzem.in',
+        'https://buannelstudio.in',
         'http://127.0.0.1:5500',
         'http://localhost:3000',
     ],

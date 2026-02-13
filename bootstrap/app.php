@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AllowCrossOriginResource;
 use App\Http\Middleware\FirebaseAuth;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -27,7 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // ✅ Register Firebase route middleware
         $middleware->alias([
             'firebase.auth' => FirebaseAuth::class,
+            'allow.origin' => AllowCrossOriginResource::class,
         ]);
+        
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

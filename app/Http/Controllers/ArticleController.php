@@ -28,27 +28,46 @@ class ArticleController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Article::withCount('comments')->with(['author', 'category', 'tags']);
+            $query = Article::withCount('comments')
+                ->where('isApproved', true)
+                ->with(['author', 'category', 'tags']);
 
-            // Filtering by category or tag slug
-            if ($request->has('category')) {
-                $query->whereHas('category', function ($q) use ($request) {
-                    $q->where('slug', Str::slug($request->category));
+            // Default message
+            $message = 'Articles retrieved successfully.';
 
+            // 🔍 Filter by category slug
+            if ($request->filled('category')) {
+                $categorySlug = Str::slug($request->category);
+                $query->whereHas('category', function ($q) use ($categorySlug) {
+                    $q->where('slug', $categorySlug);
                 });
+
+                $message = "Articles retrieved successfully for category '{$request->category}'.";
             }
 
+            // 🔍 Filter by tag slug
             if ($request->has('tag')) {
-                $query->whereHas('tags', function ($q) use ($request) {
-                    $q->where('slug', $request->tag);
+                $tagSlug = $request->tag;
+                $query->whereHas('tags', function ($q) use ($tagSlug) {
+                    $q->where('slug', $tagSlug);
                 });
+
+                $message = "Articles retrieved successfully for tag '{$request->tag}'.";
             }
 
+            // 🔍 Filter by article_feature_id
+            if ($request->filled('article_feature_id')) {
+                $featureId = $request->article_feature_id;
+                $query->where('article_feature_id', $featureId);
+                $message .= " (Feature ID: {$featureId})";
+            }
+
+            // ✅ Paginate results
             $articles = $query->paginate(10);
 
             return response()->json([
                 'status' => true,
-                'message' => 'Articles retrieved successfully.',
+                'message' => $message,
                 'data' => $articles,
             ]);
         } catch (\Exception $e) {
@@ -243,8 +262,6 @@ class ArticleController extends Controller
                     );
                 }
             }
-
-            DB::commit();
 
             return response()->json([
                 'status' => true,
@@ -450,8 +467,6 @@ class ArticleController extends Controller
                 }
             }
 
-            DB::commit();
-
             return response()->json([
                 'status' => true,
                 'message' => 'Article created successfully.',
@@ -467,7 +482,7 @@ class ArticleController extends Controller
             ], 422);
 
         } catch (\Throwable $e) {
-            DB::rollBack();
+
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create article.',
